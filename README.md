@@ -1,51 +1,164 @@
-# HTML FastAPI Project
+# HTML FastAPI Project - Top Thrill 2 Launch History
 
-This project is a simple web application that interacts with a FastAPI backend hosted on Google Cloud Compute. It fetches launch history data and displays it on a web page.
+A modern web application that provides real-time monitoring of Cedar Point's Top Thrill 2 roller coaster launch history. The application features a responsive design, auto-refresh capabilities, and comprehensive statistics tracking.
+
+## Features
+
+- 🎢 **Real-time Event Monitoring** - View the latest launch events as they happen
+- 📊 **Live Statistics** - Track success rates and event counts by outcome
+- 🔄 **Auto-refresh** - Automatic data updates every 30 seconds (toggleable)
+- 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
+- ⚡ **Fast Loading** - Optimized performance with modern web standards
+- 🎨 **Modern UI** - Clean, professional interface with intuitive navigation
 
 ## Project Structure
 
 ```
-html-fastapi-project
-├── src
-│   ├── index.html        # Main HTML document
-│   └── scripts
-│       └── app.js       # JavaScript for fetching data from FastAPI
-└── README.md             # Project documentation
+html-fastapi-project/
+├── src/
+│   ├── index.html              # Main HTML document
+│   ├── styles/
+│   │   └── main.css           # Modern CSS styling
+│   └── scripts/
+│       └── app.js             # Enhanced JavaScript functionality
+└── README.md                   # Project documentation
 ```
 
 ## Getting Started
 
-To set up and run this project locally, follow these steps:
+### Prerequisites
+- A modern web browser (Chrome, Firefox, Safari, Edge)
+- Active FastAPI backend running on Google Cloud Compute
+
+### Local Development
 
 1. **Clone the repository:**
-   ```
+   ```bash
    git clone <repository-url>
    cd html-fastapi-project
    ```
 
-2. **Open `src/index.html` in your web browser.**
+2. **Update API configuration:**
+   - Open `src/scripts/app.js`
+   - Update the `apiUrl` variable with your FastAPI instance URL
 
-3. **Ensure that the FastAPI backend is running on Google Cloud Compute.** Update the API endpoint in `src/scripts/app.js` to point to your FastAPI instance.
+3. **Serve the application:**
+   - For development: Open `src/index.html` directly in your browser
+   - For production: Use a web server (see deployment section)
 
 ## Deployment
 
-To deploy this project on Netlify:
+### Netlify Deployment
 
-1. Create a new site from Git in your Netlify dashboard.
-2. Connect your Git repository.
-3. Set the build command to `npm run build` if you have a build step (not necessary for this simple project).
-4. Set the publish directory to `src`.
-5. Click on "Deploy site".
+1. **Connect your repository:**
+   - Create a new site from Git in Netlify
+   - Connect your GitHub/GitLab repository
 
-## API Endpoints
+2. **Configure build settings:**
+   - Build command: Leave empty (static site)
+   - Publish directory: `src`
+   - Node version: Not required
 
-The FastAPI backend provides the following endpoints:
+3. **Deploy:**
+   - Click "Deploy site"
+   - Your site will be available at `https://your-site-name.netlify.app`
 
-- `GET /latest`: Fetch the most recent event.
-- `GET /events?limit=100`: Fetch the last N events (default 100, max 1000).
-- `GET /stats`: Get a count of each outcome.
-- `GET /healthz`: Check the health of the API.
+### Alternative Deployment Options
+
+- **GitHub Pages:** Push to `gh-pages` branch
+- **Vercel:** Connect repository and deploy
+- **AWS S3:** Upload `src/` contents to S3 bucket with static hosting
+
+## API Integration
+
+The application integrates with a FastAPI backend that provides:
+
+### Endpoints Used
+- `GET /latest` - Fetch the most recent launch event
+- `GET /events?limit={n}` - Fetch recent events (10-100 items)
+- `GET /stats` - Get event statistics by outcome type
+- `GET /healthz` - API health check
+
+### Data Format
+Events are expected in the following format:
+```json
+{
+  "timestamp": "2023-12-01T10:30:00Z",
+  "outcome": "success|failure|maintenance",
+  "details": "Additional event information"
+}
+```
+
+## Features in Detail
+
+### Auto-refresh System
+- Automatically updates data every 30 seconds
+- Can be toggled on/off via checkbox
+- Provides visual feedback during updates
+
+### Event Display
+- **Latest Event:** Prominently displayed with outcome status
+- **Event List:** Configurable limit (10-100 events)
+- **Color Coding:** Visual status indicators for different outcomes
+
+### Statistics Dashboard
+- Real-time counts for each event outcome type
+- Visual breakdown of success/failure rates
+- Updates automatically with new data
+
+### Responsive Design
+- Mobile-first approach
+- Adapts to different screen sizes
+- Touch-friendly interface on mobile devices
+
+## Browser Support
+
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+## Performance Considerations
+
+- Implements efficient data loading
+- Uses modern JavaScript features (async/await)
+- Optimized CSS with minimal reflows
+- Automatic cleanup of intervals on page unload
+
+## Troubleshooting
+
+### Common Issues
+
+**Data not loading:**
+- Check browser console for errors
+- Verify API URL is correct and accessible
+- Ensure CORS is properly configured on the backend
+
+**Auto-refresh not working:**
+- Check if checkbox is enabled
+- Verify no JavaScript errors in console
+- Ensure page remains active (not in background tab)
+
+**Styling issues:**
+- Clear browser cache
+- Check that `styles/main.css` is accessible
+- Verify no conflicting CSS rules
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+## Support
+
+For issues and questions:
+- Check the browser console for error messages
+- Verify API connectivity
+- Review the troubleshooting section above

@@ -4,29 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Top Thrill 2 Launch History</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles/main.css">
     <script src="scripts/app.js" defer></script>
 </head>
 <body>
     <header>
-        <h1>Top Thrill 2 Launch History</h1>
+        <div class="container">
+            <h1>🎢 Top Thrill 2 Launch History</h1>
+            <p class="subtitle">Real-time monitoring of Cedar Point's premier coaster</p>
+        </div>
     </header>
-    <main>
-        <section id="latest-event">
-            <h2>Latest Event</h2>
-            <div id="latest-event-data">Loading...</div>
-        </section>
-        <section id="events">
-            <h2>Recent Events</h2>
-            <ul id="events-list">Loading...</ul>
-        </section>
-        <section id="stats">
-            <h2>Event Statistics</h2>
-            <div id="stats-data">Loading...</div>
+    
+    <main class="container">
+        <div class="controls">
+            <button id="refresh-btn" class="btn btn-primary">🔄 Refresh Data</button>
+            <label class="auto-refresh">
+                <input type="checkbox" id="auto-refresh" checked>
+                Auto-refresh (30s)
+            </label>
+        </div>
+
+        <div class="grid">
+            <section class="card" id="latest-section">
+                <h2>📊 Latest Event</h2>
+                <div id="latest-event" class="loading">Loading...</div>
+            </section>
+
+            <section class="card" id="stats-section">
+                <h2>📈 Statistics</h2>
+                <div id="stats-data" class="loading">Loading...</div>
+            </section>
+        </div>
+
+        <section class="card full-width" id="events-section">
+            <div class="section-header">
+                <h2>📋 Recent Events</h2>
+                <div class="controls-inline">
+                    <label for="event-limit">Show:</label>
+                    <select id="event-limit">
+                        <option value="10">10 events</option>
+                        <option value="25">25 events</option>
+                        <option value="50" selected>50 events</option>
+                        <option value="100">100 events</option>
+                    </select>
+                </div>
+            </div>
+            <div id="events-list" class="loading">Loading...</div>
         </section>
     </main>
+
     <footer>
-        <p>&copy; 2023 Top Thrill 2 Launch History</p>
+        <div class="container">
+            <p>&copy; 2023 Top Thrill 2 Launch History | Last updated: <span id="last-updated">Never</span></p>
+        </div>
     </footer>
 </body>
 </html>
