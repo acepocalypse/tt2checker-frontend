@@ -1,6 +1,6 @@
 // This file contains JavaScript code that will make API calls to the FastAPI hosted on Google Cloud Compute.
 
-const apiUrl = 'http://34.30.111.98:8000';
+const apiUrl = 'https://34.30.111.98:8000';
 let autoRefreshInterval;
 
 // Utility functions
