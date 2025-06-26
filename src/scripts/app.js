@@ -178,49 +178,57 @@ async function fetchTodayRunStats() {
         if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         
         const data = await response.json();
-        console.log('Fetched events:', data.length);
+        console.log('Fetched events for today stats:', data.length);
         
-        // Get today's date parts for comparison
+        // Get today's date in Eastern Time
         const now = new Date();
-        const todayYear = now.getFullYear();
-        const todayMonth = now.getMonth();
-        const todayDate = now.getDate();
+        const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+        const todayYear = easternTime.getFullYear();
+        const todayMonth = easternTime.getMonth() + 1; // Make it 1-indexed for comparison
+        const todayDate = easternTime.getDate();
+        
+        console.log(`Looking for events on: ${todayYear}-${todayMonth.toString().padStart(2, '0')}-${todayDate.toString().padStart(2, '0')}`);
         
         // Filter for today's events
         const todayEvents = data.filter(event => {
             try {
-                let eventDate;
-                
                 if (event.ts_utc && typeof event.ts_utc === 'string') {
                     // Handle the API format "YYYY-MM-DD HH:MM:SS"
-                    const parts = event.ts_utc.split(' ')[0].split('-');
-                    if (parts.length === 3) {
-                        const year = parseInt(parts[0], 10);
-                        const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
-                        const day = parseInt(parts[2], 10);
-                        
-                        // Simple comparison of date parts
-                        return year === todayYear && month === todayMonth && day === todayDate;
-                    }
+                    const datePart = event.ts_utc.split(' ')[0]; // Get just the date part
+                    const [year, month, day] = datePart.split('-').map(num => parseInt(num, 10));
+                    
+                    console.log(`Comparing event date ${year}-${month}-${day} with today ${todayYear}-${todayMonth}-${todayDate}`);
+                    
+                    return year === todayYear && month === todayMonth && day === todayDate;
                 }
                 
                 if (event.timestamp) {
-                    eventDate = new Date(event.timestamp);
+                    // Convert timestamp to Eastern Time for comparison
+                    let eventDate;
+                    if (typeof event.timestamp === 'number') {
+                        eventDate = new Date(event.timestamp > 1e12 ? event.timestamp : event.timestamp * 1000);
+                    } else {
+                        eventDate = new Date(event.timestamp);
+                    }
+                    
                     if (!isNaN(eventDate.getTime())) {
+                        const eventEastern = new Date(eventDate.toLocaleString("en-US", {timeZone: "America/New_York"}));
                         return (
-                            eventDate.getFullYear() === todayYear &&
-                            eventDate.getMonth() === todayMonth &&
-                            eventDate.getDate() === todayDate
+                            eventEastern.getFullYear() === todayYear &&
+                            eventEastern.getMonth() + 1 === todayMonth &&
+                            eventEastern.getDate() === todayDate
                         );
                     }
                 }
                 
                 return false;
             } catch (err) {
-                console.warn('Error processing event date:', err);
+                console.warn('Error processing event date:', err, event);
                 return false;
             }
         });
+        
+        console.log(`Found ${todayEvents.length} events for today`);
         
         // Count total runs and successful runs
         const totalRuns = todayEvents.length;
@@ -232,6 +240,8 @@ async function fetchTodayRunStats() {
         const successRate = totalRuns > 0 
             ? Math.round((successfulRuns / totalRuns) * 100) 
             : 0;
+        
+        console.log(`Total runs: ${totalRuns}, Successful: ${successfulRuns}, Rate: ${successRate}%`);
         
         // Update the counter elements
         updateElement('run-counter', `
