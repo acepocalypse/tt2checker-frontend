@@ -177,7 +177,6 @@ main {
 }
 
 .events-card {
-    height: 100%;
     display: flex;
     flex-direction: column;
 }
@@ -192,10 +191,9 @@ main {
     margin: 0;
 }
 
-/* Specific adjustments to reduce spacing */
 .event-item:last-child {
-    margin-bottom: 0; /* Remove margin from last event item */
-    padding-bottom: 0.5rem; /* Small padding for last item only */
+    margin-bottom: 0; 
+    padding-bottom: 0.5rem; 
 }
 
 /* Grid layout */
