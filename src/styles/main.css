@@ -96,7 +96,6 @@ main {
 .bmc-container .bmc-btn {
     min-width: auto !important;
     height: 30px !important;
-    transform: scale(0.85);
     transform-origin: right center;
     font-size: 0.85rem !important; 
 }
@@ -506,6 +505,10 @@ footer {
         align-items: center;
         margin: 0;
         order: 4;
+    }
+
+    .bmc-btn-container {
+            text-align: center;
     }
     
     .controls-inline {
