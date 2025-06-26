@@ -8,23 +8,24 @@ const formatTimestamp = timestamp => {
     try {
         let date;
         
-        // Handle the API format "YYYY-MM-DD HH:MM:SS" as UTC
-        if (typeof timestamp === 'string' && timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-            // Parse as UTC and convert to EDT/EST
-            date = new Date(timestamp + ' UTC');
-        } else if (typeof timestamp === 'string') {
-            // Try parsing as ISO string first, then as a number
-            date = new Date(timestamp);
-            if (isNaN(date.getTime())) {
-                // Try parsing as unix timestamp (seconds)
-                const numericTimestamp = parseInt(timestamp);
-                if (!isNaN(numericTimestamp)) {
-                    date = new Date(numericTimestamp * 1000);
-                }
+        // First, standardize the input
+        if (typeof timestamp === 'string') {
+            // Handle the API format "YYYY-MM-DD HH:MM:SS" specially
+            if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+                // Replace space with 'T' for ISO format and add Z for UTC
+                const isoFormat = timestamp.replace(' ', 'T') + 'Z';
+                date = new Date(isoFormat);
+            } else if (!isNaN(Number(timestamp))) {
+                // If it's a numeric string, treat as unix timestamp
+                const num = Number(timestamp);
+                date = new Date(num > 1e12 ? num : num * 1000);
+            } else {
+                // Try direct parsing for ISO strings
+                date = new Date(timestamp);
             }
         } else if (typeof timestamp === 'number') {
             // Handle unix timestamp (seconds or milliseconds)
-            date = timestamp > 1e12 ? new Date(timestamp) : new Date(timestamp * 1000);
+            date = new Date(timestamp > 1e12 ? timestamp : timestamp * 1000);
         } else {
             date = new Date(timestamp);
         }
@@ -34,17 +35,37 @@ const formatTimestamp = timestamp => {
             return 'Invalid date';
         }
         
-        // Format in EDT/EST timezone
-        return date.toLocaleString('en-US', {
-            timeZone: 'America/New_York',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        });
+        try {
+            // Try full formatting with timezone first
+            return date.toLocaleString('en-US', {
+                timeZone: 'America/New_York',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+        } catch (innerError) {
+            // Fallback for browsers that don't support timeZone (like older mobile browsers)
+            console.warn('Timezone conversion failed, using UTC:', innerError);
+            
+            // Simple offset conversion (approximation for EDT/EST)
+            const offset = -4; // EDT, or -5 for EST
+            const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+            const adjustedDate = new Date(utc + (3600000 * offset));
+            
+            return adjustedDate.toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+        }
     } catch (error) {
         console.warn('Error formatting timestamp:', timestamp, error);
         return 'Invalid date';
