@@ -111,7 +111,6 @@ async function fetchLatestEvent() {
             <div class="event-card latest">
                 <div class="event-outcome outcome-${formatted.outcome.toLowerCase().replace(/\s+/g, '-')}">${formatted.outcome}</div>
                 <div class="event-time">${formatted.timestamp}</div>
-                <div class="event-details">${formatted.details}</div>
             </div>
         `);
     } catch (error) {
@@ -137,7 +136,6 @@ async function fetchEvents(limit = 50) {
                 return `
                     <div class="event-item">
                         <span class="event-outcome outcome-${formatted.outcome.toLowerCase().replace(/\s+/g, '-')}">${formatted.outcome}</span>
-                        <span class="event-details">${formatted.details}</span>
                         <span class="event-time">${formatted.timestamp}</span>
                     </div>
                 `;
