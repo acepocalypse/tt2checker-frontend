@@ -458,7 +458,72 @@ footer {
     font-size: 0.875rem;
 }
 
-/* Responsive design */
+/* Fun Facts Section - Smaller and at bottom */
+.fun-facts {
+    background: linear-gradient(135deg, var(--surface-color) 0%, #f0f4f8 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+    margin-bottom: 0;
+}
+
+.fun-facts h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-md);
+    color: var(--primary-color);
+    font-size: 0.875rem;
+}
+
+.facts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.fact-item {
+    background: white;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-light);
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.fact-item:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-color);
+}
+
+.fact-icon {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-xs);
+    display: block;
+}
+
+.fact-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-xs);
+    font-variant-numeric: tabular-nums;
+}
+
+.fact-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.fact-highlight {
+    color: var(--success-color);
+    font-weight: 600;
+}
+
 @media (max-width: 900px) {
     .two-column-layout {
         grid-template-columns: 1fr;
@@ -532,6 +597,28 @@ footer {
     
     .left-column {
         gap: var(--spacing-md);
+    }
+    
+    .fun-facts {
+        padding: var(--spacing-sm);
+        margin-top: var(--spacing-lg);
+    }
+    
+    .facts-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xs);
+    }
+    
+    .fact-item {
+        padding: var(--spacing-sm);
+    }
+    
+    .fact-icon {
+        font-size: 1rem;
+    }
+    
+    .fact-value {
+        font-size: 0.875rem;
     }
 }
 

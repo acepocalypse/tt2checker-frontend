@@ -302,6 +302,146 @@ async function fetchStats() {
     }
 }
 
+// Fun Facts functions
+function calculateTimeSince(timestamp) {
+    if (!timestamp) return 'Unknown';
+    
+    try {
+        let eventDate;
+        
+        if (typeof timestamp === 'string') {
+            if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+                const isoFormat = timestamp.replace(' ', 'T') + 'Z';
+                eventDate = new Date(isoFormat);
+            } else {
+                eventDate = new Date(timestamp);
+            }
+        } else {
+            eventDate = new Date(timestamp > 1e12 ? timestamp : timestamp * 1000);
+        }
+        
+        if (isNaN(eventDate.getTime())) return 'Unknown';
+        
+        const now = new Date();
+        const diffMs = now - eventDate;
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (diffHours > 0) {
+            return `${diffHours}h ${diffMinutes}m`;
+        } else if (diffMinutes > 0) {
+            return `${diffMinutes}m`;
+        } else {
+            return 'Just now';
+        }
+    } catch (error) {
+        console.warn('Error calculating time since:', error);
+        return 'Unknown';
+    }
+}
+
+function findFirstLaunchToday(events) {
+    // Get today's date in Eastern Time
+    const now = new Date();
+    const todayEastern = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/New_York',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(now);
+    
+    // Filter for today's events and find the earliest
+    const todayEvents = events.filter(event => {
+        try {
+            let eventDate;
+            
+            if (event.ts_utc && typeof event.ts_utc === 'string') {
+                const utcDateTime = event.ts_utc.replace(' ', 'T') + 'Z';
+                eventDate = new Date(utcDateTime);
+            } else if (event.timestamp) {
+                eventDate = new Date(typeof event.timestamp === 'number' 
+                    ? (event.timestamp > 1e12 ? event.timestamp : event.timestamp * 1000)
+                    : event.timestamp);
+            } else {
+                return false;
+            }
+            
+            if (isNaN(eventDate.getTime())) return false;
+            
+            const easternEventDate = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'America/New_York',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).format(eventDate);
+            
+            return easternEventDate === todayEastern;
+        } catch (err) {
+            return false;
+        }
+    });
+    
+    if (todayEvents.length === 0) return null;
+    
+    // Sort by timestamp and get the earliest
+    const firstEvent = todayEvents.sort((a, b) => {
+        const timeA = a.ts_utc || a.timestamp;
+        const timeB = b.ts_utc || b.timestamp;
+        
+        if (typeof timeA === 'string' && typeof timeB === 'string') {
+            return timeA.localeCompare(timeB);
+        }
+        
+        const dateA = new Date(timeA);
+        const dateB = new Date(timeB);
+        return dateA - dateB;
+    })[0];
+    
+    return firstEvent;
+}
+
+async function updateFunFacts() {
+    try {
+        // Get latest event for time since last launch
+        const latestResponse = await fetch(`${apiUrl}/latest`);
+        if (latestResponse.ok) {
+            const latestEvent = await latestResponse.json();
+            const timeSince = calculateTimeSince(latestEvent.ts_utc || latestEvent.timestamp);
+            document.getElementById('time-since-last').textContent = timeSince;
+        } else {
+            document.getElementById('time-since-last').textContent = 'Unknown';
+        }
+        
+        // Get all events for other stats
+        const eventsResponse = await fetch(`${apiUrl}/events?limit=1000`);
+        if (eventsResponse.ok) {
+            const events = await eventsResponse.json();
+            
+            // Find first launch today
+            const firstLaunch = findFirstLaunchToday(events);
+            if (firstLaunch) {
+                const firstLaunchTime = formatTimestamp(firstLaunch.ts_utc || firstLaunch.timestamp);
+                // Extract just the time part
+                const timeMatch = firstLaunchTime.match(/(\d{1,2}:\d{2}:\d{2}\s*[AP]M)/i);
+                document.getElementById('first-launch-time').textContent = timeMatch ? timeMatch[1] : 'Unknown';
+            } else {
+                document.getElementById('first-launch-time').textContent = 'None today';
+            }
+            
+            // Total launches
+            document.getElementById('total-launches').textContent = events.length.toLocaleString();
+        } else {
+            document.getElementById('first-launch-time').textContent = 'Unknown';
+            document.getElementById('total-launches').textContent = 'Unknown';
+        }
+    } catch (error) {
+        console.error('Error updating fun facts:', error);
+        document.getElementById('time-since-last').textContent = 'Error';
+        document.getElementById('first-launch-time').textContent = 'Error';
+        document.getElementById('total-launches').textContent = 'Error';
+    }
+}
+
 // Refresh functions
 async function refreshAllData() {
     const limit = document.getElementById('event-limit').value;
@@ -310,7 +450,8 @@ async function refreshAllData() {
         fetchLatestEvent(),
         fetchEvents(parseInt(limit)),
         fetchStats(),
-        fetchTodayRunStats()
+        fetchTodayRunStats(),
+        updateFunFacts()
     ]);
     updateLastRefreshed();
 }
@@ -336,6 +477,8 @@ function setupAutoRefresh() {
 document.addEventListener('DOMContentLoaded', () => {
     checkApiConnection();
     refreshAllData();
+    // Update fun facts every minute for the "time since" counter
+    setInterval(updateFunFacts, 60000);
     document.getElementById('refresh-btn').addEventListener('click', refreshAllData);
     document.getElementById('event-limit').addEventListener('change', e => {
         fetchEvents(parseInt(e.target.value));
