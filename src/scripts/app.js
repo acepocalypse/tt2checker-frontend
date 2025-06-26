@@ -54,7 +54,7 @@ const formatTimestamp = timestamp => {
 const formatEventData = event => ({
     timestamp: formatTimestamp(event.ts_utc || event.timestamp),
     outcome: event.outcome || 'Unknown',
-    details: event.details || event.message || event.description || 'No additional details'
+    details: event.outcome || 'Event'
 });
 const updateLastRefreshed = () => {
     document.getElementById('last-updated').textContent = new Date().toLocaleString();

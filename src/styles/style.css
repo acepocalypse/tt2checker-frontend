@@ -1,0 +1,54 @@
+/* Base styles for the events container and list */
+.events-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem; /* Reduce from potentially larger value */
+    margin-bottom: 0; /* Remove any bottom margin */
+    height: auto; /* Ensure container only takes needed height */
+    max-height: none; /* Remove any max-height that might cause spacing */
+}
+
+#events-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: auto; /* Let content determine height */
+}
+
+.event-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    background-color: #fff;
+    transition: background-color 0.3s;
+}
+
+.event-item:hover {
+    background-color: #f9f9f9;
+}
+
+.event-outcome {
+    font-weight: bold;
+}
+
+.event-time {
+    color: #888;
+    font-size: 0.875rem;
+}
+
+.event-details {
+    flex-grow: 1;
+    margin-left: 1rem;
+}
+
+/* Specific adjustments to reduce spacing */
+.event-item:last-child {
+    margin-bottom: 0; /* Remove margin from last event item */
+    padding-bottom: 0.5rem; /* Small padding for last item only */
+}
+
+/* ...existing code... */
