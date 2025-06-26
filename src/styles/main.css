@@ -87,7 +87,7 @@ main {
     flex: 1;
 }
 
-/* Controls - more compact */
+/* Controls */
 .controls {
     display: flex;
     justify-content: space-between;
@@ -545,7 +545,8 @@ footer {
     }
     
     .right-column {
-        max-height: 500px;
+        max-height: none;
+        margin-bottom: var(--spacing-xl);
     }
 }
 
