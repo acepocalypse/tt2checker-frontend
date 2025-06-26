@@ -149,6 +149,63 @@ async function fetchEvents(limit = 50) {
     }
 }
 
+async function fetchTodayRunStats() {
+    showLoading('run-counter');
+    try {
+        // Get today's events from the API
+        const response = await fetch(`${apiUrl}/events?limit=1000`);  // Fetch enough events to cover today
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        
+        const data = await response.json();
+        
+        // Filter for today's events only
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Beginning of today
+        
+        const todayEvents = data.filter(event => {
+            let eventDate;
+            if (event.ts_utc) {
+                // Handle the API format "YYYY-MM-DD HH:MM:SS" as UTC
+                eventDate = new Date(event.ts_utc + ' UTC');
+            } else if (event.timestamp) {
+                eventDate = new Date(event.timestamp);
+            } else {
+                return false; // Skip events without timestamp
+            }
+            
+            return eventDate >= today;
+        });
+        
+        // Count total runs and successful runs
+        const totalRuns = todayEvents.length;
+        const successfulRuns = todayEvents.filter(event => 
+            event.outcome && event.outcome.toLowerCase() === 'success'
+        ).length;
+        
+        // Calculate success percentage
+        const successRate = totalRuns > 0 
+            ? Math.round((successfulRuns / totalRuns) * 100) 
+            : 0;
+        
+        // Update the counter elements
+        updateElement('run-counter', `
+            <div class="counter-grid">
+                <div class="counter-item">
+                    <span class="counter-label">Runs Today:</span>
+                    <span class="counter-value" id="runs-today">${totalRuns}</span>
+                </div>
+                <div class="counter-item">
+                    <span class="counter-label">Success Rate:</span>
+                    <span class="counter-value" id="success-rate">${successRate}%</span>
+                </div>
+            </div>
+        `);
+    } catch (error) {
+        console.error('Error fetching today\'s run stats:', error);
+        showError('run-counter', 'Failed to fetch today\'s run statistics');
+    }
+}
+
 async function fetchStats() {
     showLoading('stats-data');
     try {
@@ -178,7 +235,8 @@ async function refreshAllData() {
         checkApiConnection(),
         fetchLatestEvent(),
         fetchEvents(parseInt(limit)),
-        fetchStats()
+        fetchStats(),
+        fetchTodayRunStats()
     ]);
     updateLastRefreshed();
 }
