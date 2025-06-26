@@ -174,27 +174,52 @@ async function fetchTodayRunStats() {
     showLoading('run-counter');
     try {
         // Get today's events from the API
-        const response = await fetch(`${apiUrl}/events?limit=1000`);  // Fetch enough events to cover today
+        const response = await fetch(`${apiUrl}/events?limit=1000`);
         if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         
         const data = await response.json();
+        console.log('Fetched events:', data.length);
         
-        // Filter for today's events only
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Beginning of today
+        // Get today's date parts for comparison
+        const now = new Date();
+        const todayYear = now.getFullYear();
+        const todayMonth = now.getMonth();
+        const todayDate = now.getDate();
         
+        // Filter for today's events
         const todayEvents = data.filter(event => {
-            let eventDate;
-            if (event.ts_utc) {
-                // Handle the API format "YYYY-MM-DD HH:MM:SS" as UTC
-                eventDate = new Date(event.ts_utc + ' UTC');
-            } else if (event.timestamp) {
-                eventDate = new Date(event.timestamp);
-            } else {
-                return false; // Skip events without timestamp
+            try {
+                let eventDate;
+                
+                if (event.ts_utc && typeof event.ts_utc === 'string') {
+                    // Handle the API format "YYYY-MM-DD HH:MM:SS"
+                    const parts = event.ts_utc.split(' ')[0].split('-');
+                    if (parts.length === 3) {
+                        const year = parseInt(parts[0], 10);
+                        const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+                        const day = parseInt(parts[2], 10);
+                        
+                        // Simple comparison of date parts
+                        return year === todayYear && month === todayMonth && day === todayDate;
+                    }
+                }
+                
+                if (event.timestamp) {
+                    eventDate = new Date(event.timestamp);
+                    if (!isNaN(eventDate.getTime())) {
+                        return (
+                            eventDate.getFullYear() === todayYear &&
+                            eventDate.getMonth() === todayMonth &&
+                            eventDate.getDate() === todayDate
+                        );
+                    }
+                }
+                
+                return false;
+            } catch (err) {
+                console.warn('Error processing event date:', err);
+                return false;
             }
-            
-            return eventDate >= today;
         });
         
         // Count total runs and successful runs
