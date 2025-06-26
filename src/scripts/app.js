@@ -302,6 +302,61 @@ async function fetchStats() {
     }
 }
 
+async function fetchTopThrill2Status() {
+    showLoading('ride-status');
+    try {
+        const response = await fetch('https://queue-times.com/parks/50/queue_times.json');
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        
+        const data = await response.json();
+        console.log('Queue times data:', data); // Debug log
+        
+        // Find Top Thrill 2 (id: 3772)
+        const topThrill2 = data.lands?.flatMap(land => land.rides || [])
+            .find(ride => ride.id === 3772);
+        
+        if (!topThrill2) {
+            updateElement('ride-status', '<div class="no-data">Top Thrill 2 not found in queue data</div>');
+            return;
+        }
+        
+        const isOpen = topThrill2.is_open;
+        const waitTime = topThrill2.wait_time;
+        const lastUpdated = topThrill2.last_updated;
+        
+        let statusClass = isOpen ? 'status-open' : 'status-closed';
+        let statusText = isOpen ? 'Open' : 'Closed';
+        let waitTimeText = '';
+        
+        if (isOpen && waitTime !== null && waitTime !== undefined) {
+            if (waitTime === 0) {
+                waitTimeText = 'Walk On';
+            } else {
+                waitTimeText = `${waitTime} min wait`;
+            }
+        }
+        
+        let lastUpdatedText = '';
+        if (lastUpdated) {
+            lastUpdatedText = formatTimestamp(lastUpdated);
+        }
+        
+        updateElement('ride-status', `
+            <div class="ride-status-card">
+                <div class="ride-info">
+                    <div class="ride-name">Top Thrill 2</div>
+                    <div class="ride-status ${statusClass}">${statusText}</div>
+                </div>
+                ${waitTimeText ? `<div class="wait-time">${waitTimeText}</div>` : ''}
+                ${lastUpdatedText ? `<div class="last-updated">Updated: ${lastUpdatedText}</div>` : ''}
+            </div>
+        `);
+    } catch (error) {
+        console.error('Error fetching Top Thrill 2 status:', error);
+        showError('ride-status', 'Failed to fetch ride status');
+    }
+}
+
 // Refresh functions
 async function refreshAllData() {
     const limit = document.getElementById('event-limit').value;
@@ -310,7 +365,8 @@ async function refreshAllData() {
         fetchLatestEvent(),
         fetchEvents(parseInt(limit)),
         fetchStats(),
-        fetchTodayRunStats()
+        fetchTodayRunStats(),
+        fetchTopThrill2Status()
     ]);
     updateLastRefreshed();
 }
