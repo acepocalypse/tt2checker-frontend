@@ -88,10 +88,27 @@ main {
     box-shadow: var(--shadow);
 }
 
-.controls-inline {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
+/* Buy Me a Coffee button container */
+.bmc-container {
+    margin-left: auto;
+}
+
+.bmc-container .bmc-btn {
+    min-width: auto !important;
+    height: 30px !important;
+    transform: scale(0.85);
+    transform-origin: right center;
+    font-size: 0.85rem !important; 
+}
+
+@media (max-width: 768px) {
+    .bmc-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        order: 4;
+        margin-top: var(--spacing-xs);
+    }
 }
 
 .btn {
