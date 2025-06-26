@@ -332,6 +332,34 @@ main {
     color: var(--text-muted);
 }
 
+/* Additional outcome styles for various status types */
+.outcome-operational,
+.outcome-running,
+.outcome-open {
+    background-color: #c6f6d5;
+    color: var(--success-color);
+}
+
+.outcome-down,
+.outcome-closed,
+.outcome-broken {
+    background-color: #fed7d7;
+    color: var(--error-color);
+}
+
+.outcome-testing,
+.outcome-partial,
+.outcome-limited {
+    background-color: #faf089;
+    color: var(--warning-color);
+}
+
+.outcome-weather-delay,
+.outcome-weather {
+    background-color: #bee3f8;
+    color: #2b6cb0;
+}
+
 .event-time {
     font-size: 0.75rem;
     color: var(--text-muted);

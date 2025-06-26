@@ -2,11 +2,45 @@ const apiUrl = 'https://api.thrill2.top';
 let autoRefreshInterval;
 
 // Utility functions
-const formatTimestamp = timestamp => new Date(timestamp).toLocaleString();
+const formatTimestamp = timestamp => {
+    if (!timestamp) return 'Unknown time';
+    
+    try {
+        // Handle different timestamp formats
+        let date;
+        if (typeof timestamp === 'string') {
+            // Try parsing as ISO string first, then as a number
+            date = new Date(timestamp);
+            if (isNaN(date.getTime())) {
+                // Try parsing as unix timestamp (seconds)
+                const numericTimestamp = parseInt(timestamp);
+                if (!isNaN(numericTimestamp)) {
+                    date = new Date(numericTimestamp * 1000);
+                }
+            }
+        } else if (typeof timestamp === 'number') {
+            // Handle unix timestamp (seconds or milliseconds)
+            date = timestamp > 1e12 ? new Date(timestamp) : new Date(timestamp * 1000);
+        } else {
+            date = new Date(timestamp);
+        }
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return 'Invalid date';
+        }
+        
+        return date.toLocaleString();
+    } catch (error) {
+        console.warn('Error formatting timestamp:', timestamp, error);
+        return 'Invalid date';
+    }
+};
+
 const formatEventData = event => ({
     timestamp: formatTimestamp(event.timestamp),
     outcome: event.outcome || 'Unknown',
-    details: event.details || 'No additional details'
+    details: event.details || event.message || event.description || 'No additional details'
 });
 const updateLastRefreshed = () => {
     document.getElementById('last-updated').textContent = new Date().toLocaleString();
@@ -56,11 +90,12 @@ async function fetchLatestEvent() {
         if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         
         const data = await response.json();
+        console.log('Latest event data:', data); // Debug log
         const formatted = formatEventData(data);
         
         updateElement('latest-event', `
             <div class="event-card latest">
-                <div class="event-outcome outcome-${formatted.outcome.toLowerCase()}">${formatted.outcome}</div>
+                <div class="event-outcome outcome-${formatted.outcome.toLowerCase().replace(/\s+/g, '-')}">${formatted.outcome}</div>
                 <div class="event-time">${formatted.timestamp}</div>
                 <div class="event-details">${formatted.details}</div>
             </div>
@@ -78,6 +113,7 @@ async function fetchEvents(limit = 50) {
         if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         
         const data = await response.json();
+        console.log('Events data:', data); // Debug log
         
         if (data.length === 0) {
             updateElement('events-list', '<div class="no-data">No events found</div>');
@@ -86,7 +122,7 @@ async function fetchEvents(limit = 50) {
                 const formatted = formatEventData(event);
                 return `
                     <div class="event-item">
-                        <span class="event-outcome outcome-${formatted.outcome.toLowerCase()}">${formatted.outcome}</span>
+                        <span class="event-outcome outcome-${formatted.outcome.toLowerCase().replace(/\s+/g, '-')}">${formatted.outcome}</span>
                         <span class="event-details">${formatted.details}</span>
                         <span class="event-time">${formatted.timestamp}</span>
                     </div>
