@@ -37,6 +37,9 @@ body {
     font-size: 14px;
     letter-spacing: -0.01em;
     padding-bottom: var(--spacing-xl);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
@@ -81,6 +84,7 @@ header h1 {
 /* Main content */
 main {
     padding: var(--spacing-md) 0;
+    flex: 1;
 }
 
 /* Controls - more compact */
@@ -188,6 +192,7 @@ main {
     display: grid;
     grid-template-columns: 1.75fr 1fr;
     gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
 }
 
 .left-column {
@@ -197,7 +202,6 @@ main {
 }
 
 .right-column {
-    min-height: 600px;
     max-height: calc(100vh - 200px);
     position: relative;
 }
@@ -537,10 +541,10 @@ footer {
 @media (max-width: 900px) {
     .two-column-layout {
         grid-template-columns: 1fr;
+        margin-bottom: var(--spacing-lg);
     }
     
     .right-column {
-        min-height: 400px;
         max-height: 500px;
     }
 }
