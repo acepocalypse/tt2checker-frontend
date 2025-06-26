@@ -180,14 +180,18 @@ async function fetchTodayRunStats() {
         const data = await response.json();
         console.log('Fetched events for today stats:', data.length);
         
-        // Get today's date in Eastern Time
+        // Get today's date in Eastern Time - more robust approach
         const now = new Date();
-        const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-        const todayYear = easternTime.getFullYear();
-        const todayMonth = easternTime.getMonth() + 1; // Make it 1-indexed for comparison
-        const todayDate = easternTime.getDate();
+        const easternFormatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/New_York',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+        const todayEastern = easternFormatter.format(now); // Returns YYYY-MM-DD format
         
-        console.log(`Looking for events on: ${todayYear}-${todayMonth.toString().padStart(2, '0')}-${todayDate.toString().padStart(2, '0')}`);
+        console.log(`Looking for events on Eastern date: ${todayEastern}`);
+        console.log(`Current Eastern time: ${now.toLocaleString('en-US', {timeZone: 'America/New_York'})}`);
         
         // Filter for today's events
         const todayEvents = data.filter(event => {
@@ -195,11 +199,22 @@ async function fetchTodayRunStats() {
                 if (event.ts_utc && typeof event.ts_utc === 'string') {
                     // Handle the API format "YYYY-MM-DD HH:MM:SS"
                     const datePart = event.ts_utc.split(' ')[0]; // Get just the date part
-                    const [year, month, day] = datePart.split('-').map(num => parseInt(num, 10));
                     
-                    console.log(`Comparing event date ${year}-${month}-${day} with today ${todayYear}-${todayMonth}-${todayDate}`);
+                    // Convert UTC timestamp to Eastern date
+                    const utcDateTime = event.ts_utc.replace(' ', 'T') + 'Z';
+                    const utcDate = new Date(utcDateTime);
                     
-                    return year === todayYear && month === todayMonth && day === todayDate;
+                    if (!isNaN(utcDate.getTime())) {
+                        const easternEventDate = new Intl.DateTimeFormat('en-CA', {
+                            timeZone: 'America/New_York',
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                        }).format(utcDate);
+                        
+                        console.log(`Event UTC: ${event.ts_utc} -> Eastern date: ${easternEventDate}`);
+                        return easternEventDate === todayEastern;
+                    }
                 }
                 
                 if (event.timestamp) {
@@ -212,12 +227,15 @@ async function fetchTodayRunStats() {
                     }
                     
                     if (!isNaN(eventDate.getTime())) {
-                        const eventEastern = new Date(eventDate.toLocaleString("en-US", {timeZone: "America/New_York"}));
-                        return (
-                            eventEastern.getFullYear() === todayYear &&
-                            eventEastern.getMonth() + 1 === todayMonth &&
-                            eventEastern.getDate() === todayDate
-                        );
+                        const easternEventDate = new Intl.DateTimeFormat('en-CA', {
+                            timeZone: 'America/New_York',
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                        }).format(eventDate);
+                        
+                        console.log(`Event timestamp: ${event.timestamp} -> Eastern date: ${easternEventDate}`);
+                        return easternEventDate === todayEastern;
                     }
                 }
                 
@@ -228,7 +246,7 @@ async function fetchTodayRunStats() {
             }
         });
         
-        console.log(`Found ${todayEvents.length} events for today`);
+        console.log(`Found ${todayEvents.length} events for today (${todayEastern})`);
         
         // Count total runs and successful runs
         const totalRuns = todayEvents.length;
