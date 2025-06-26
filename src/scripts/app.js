@@ -6,9 +6,13 @@ const formatTimestamp = timestamp => {
     if (!timestamp) return 'Unknown time';
     
     try {
-        // Handle different timestamp formats
         let date;
-        if (typeof timestamp === 'string') {
+        
+        // Handle the API format "YYYY-MM-DD HH:MM:SS" as UTC
+        if (typeof timestamp === 'string' && timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+            // Parse as UTC and convert to EDT/EST
+            date = new Date(timestamp + ' UTC');
+        } else if (typeof timestamp === 'string') {
             // Try parsing as ISO string first, then as a number
             date = new Date(timestamp);
             if (isNaN(date.getTime())) {
@@ -30,7 +34,17 @@ const formatTimestamp = timestamp => {
             return 'Invalid date';
         }
         
-        return date.toLocaleString();
+        // Format in EDT/EST timezone
+        return date.toLocaleString('en-US', {
+            timeZone: 'America/New_York',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
     } catch (error) {
         console.warn('Error formatting timestamp:', timestamp, error);
         return 'Invalid date';
@@ -38,7 +52,7 @@ const formatTimestamp = timestamp => {
 };
 
 const formatEventData = event => ({
-    timestamp: formatTimestamp(event.timestamp),
+    timestamp: formatTimestamp(event.ts_utc || event.timestamp),
     outcome: event.outcome || 'Unknown',
     details: event.details || event.message || event.description || 'No additional details'
 });

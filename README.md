@@ -83,9 +83,9 @@ The application integrates with a FastAPI backend that provides:
 Events are expected in the following format:
 ```json
 {
-  "timestamp": "2023-12-01T10:30:00Z",
-  "outcome": "success|failure|maintenance",
-  "details": "Additional event information"
+  "id": 16,
+  "ts_utc": "2025-06-26 00:56:14",
+  "outcome": "success"
 }
 ```
 
