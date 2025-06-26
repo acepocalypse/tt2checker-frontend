@@ -486,8 +486,45 @@ footer {
     }
     
     .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
         padding: var(--spacing-sm);
         gap: var(--spacing-sm);
+        justify-items: stretch;
+        align-items: center;
+    }
+    
+    .controls > * {
+        justify-self: center;
+        align-self: center;
+    }
+    
+    .bmc-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+        order: 4;
+    }
+    
+    .controls-inline {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .auto-refresh {
+        justify-content: center;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
     }
     
     .left-column {
