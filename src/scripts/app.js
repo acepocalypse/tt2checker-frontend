@@ -354,7 +354,7 @@ function calculateTimeSince(timestamp) {
         // Handle negative differences (future timestamps)
         if (diffMs < 0) {
             console.warn('Event timestamp is in the future:', timestamp);
-            return 'Just now';
+            return 'Just Now';
         }
         
         const diffSeconds = Math.floor(diffMs / 1000);
@@ -368,10 +368,8 @@ function calculateTimeSince(timestamp) {
             return `${diffHours}h ${diffMinutes % 60}m`;
         } else if (diffMinutes > 0) {
             return `${diffMinutes}m`;
-        } else if (diffSeconds > 0) {
-            return `${diffSeconds}s`;
         } else {
-            return 'Just now';
+            return 'Just Now';
         }
     } catch (error) {
         console.error('Error calculating time since:', error, 'for timestamp:', timestamp);
