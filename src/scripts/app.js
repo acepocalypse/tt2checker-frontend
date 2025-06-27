@@ -425,9 +425,9 @@ async function updateFunFacts() {
         if (latestResponse.ok) {
             const latestEvent = await latestResponse.json();
             const timeSince = calculateTimeSince(latestEvent.ts_utc || latestEvent.timestamp);
-            document.getElementById('time-since-last').textContent = timeSince;
+            document.getElementById('time-since-last').textContent = timeSince || 'Just now';
         } else {
-            document.getElementById('time-since-last').textContent = 'Unknown';
+            document.getElementById('time-since-last').textContent = 'No data';
         }
         
         // Get all events for other stats
@@ -443,7 +443,7 @@ async function updateFunFacts() {
                 const timeMatch = firstLaunchTime.match(/(\d{1,2}:\d{2}:\d{2}\s*[AP]M)/i);
                 document.getElementById('first-launch-time').textContent = timeMatch ? timeMatch[1] : 'Unknown';
             } else {
-                document.getElementById('first-launch-time').textContent = 'None today';
+                document.getElementById('first-launch-time').textContent = 'Not yet today';
             }
             
             // Total launches
@@ -461,7 +461,7 @@ async function updateFunFacts() {
                 document.getElementById('all-time-success-rate').textContent = `${successRate}%`;
             }
         } else {
-            document.getElementById('first-launch-time').textContent = 'Unknown';
+            document.getElementById('first-launch-time').textContent = 'No data';
             document.getElementById('total-launches').textContent = 'Unknown';
             if (document.getElementById('all-time-success-rate')) {
                 document.getElementById('all-time-success-rate').textContent = 'Unknown';
@@ -469,8 +469,8 @@ async function updateFunFacts() {
         }
     } catch (error) {
         console.error('Error updating fun facts:', error);
-        document.getElementById('time-since-last').textContent = 'Error';
-        document.getElementById('first-launch-time').textContent = 'Error';
+        document.getElementById('time-since-last').textContent = 'No data';
+        document.getElementById('first-launch-time').textContent = 'No data';
         document.getElementById('total-launches').textContent = 'Error';
         if (document.getElementById('all-time-success-rate')) {
             document.getElementById('all-time-success-rate').textContent = 'Error';
