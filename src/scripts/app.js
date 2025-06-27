@@ -338,79 +338,96 @@ function findFirstLaunchToday(events) {
     
     console.log(`Looking for events matching today: ${todayUTC} (UTC)`);
     
-    // Filter events for today using UTC dates
-    const todayEvents = events.filter(event => {
+    // Filter events for today and convert timestamps to comparable format
+    const todayEventsWithTimestamps = events.map(event => {
         try {
-            if (!event) return false;
+            if (!event) return null;
             
             const timestamp = event.ts_utc || event.timestamp;
             if (!timestamp) {
                 console.log('Event missing timestamp:', event);
-                return false;
+                return null;
             }
             
             let eventDate;
+            let numericTimestamp;
+            
             if (typeof timestamp === 'string') {
                 if (!isNaN(Number(timestamp))) {
                     // Handle Unix timestamp strings (like "1751029244.14846")
-                    const num = Number(timestamp);
-                    eventDate = new Date(num * 1000);
+                    numericTimestamp = Number(timestamp);
+                    eventDate = new Date(numericTimestamp * 1000);
                 } else if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
                     // Handle "YYYY-MM-DD HH:MM:SS" format
                     const datePart = timestamp.split(' ')[0];
-                    console.log(`Event UTC date: ${datePart}, Match: ${datePart === todayUTC}`);
-                    return datePart === todayUTC;
+                    if (datePart === todayUTC) {
+                        // Convert to Date for time extraction
+                        const isoFormat = timestamp.replace(' ', 'T') + 'Z';
+                        eventDate = new Date(isoFormat);
+                        numericTimestamp = eventDate.getTime() / 1000; // Convert back to Unix timestamp
+                    } else {
+                        return null; // Not today
+                    }
                 } else {
                     // Try direct parsing for other formats
                     eventDate = new Date(timestamp);
+                    numericTimestamp = eventDate.getTime() / 1000;
                 }
             } else if (typeof timestamp === 'number') {
                 // Handle numeric timestamps
-                eventDate = new Date(timestamp > 1e12 ? timestamp : timestamp * 1000);
+                numericTimestamp = timestamp > 1e12 ? timestamp / 1000 : timestamp;
+                eventDate = new Date(numericTimestamp * 1000);
             }
             
-            if (eventDate && !isNaN(eventDate.getTime())) {
-                const eventDateUTC = eventDate.toISOString().split('T')[0];
-                console.log(`Event date: ${eventDateUTC}, Match: ${eventDateUTC === todayUTC}`);
-                return eventDateUTC === todayUTC;
+            if (!eventDate || isNaN(eventDate.getTime())) {
+                return null;
             }
             
-            return false;
+            const eventDateUTC = eventDate.toISOString().split('T')[0];
+            if (eventDateUTC === todayUTC) {
+                console.log(`Event matches today: ${timestamp} -> ${eventDate.toISOString()}`);
+                return {
+                    ...event,
+                    numericTimestamp,
+                    eventDate
+                };
+            }
+            
+            return null;
         } catch (err) {
             console.warn('Error processing event date in filter:', err, event);
-            return false;
+            return null;
         }
-    });
+    }).filter(event => event !== null);
     
-    console.log(`Found ${todayEvents.length} events for today (${todayUTC})`);
+    console.log(`Found ${todayEventsWithTimestamps.length} events for today (${todayUTC})`);
     
-    if (todayEvents.length === 0) {
+    if (todayEventsWithTimestamps.length === 0) {
         console.log('No events found for today');
         return null;
     }
     
-    // Sort by timestamp and get the earliest
+    // Sort by numeric timestamp (ascending - earliest first)
     try {
-        todayEvents.forEach(event => {
-            console.log(`Today's event: ${event.ts_utc || event.timestamp}`);
+        const sortedEvents = todayEventsWithTimestamps.sort((a, b) => {
+            const timeA = a.numericTimestamp;
+            const timeB = b.numericTimestamp;
+            console.log(`Comparing: ${timeA} (${a.eventDate.toISOString()}) vs ${timeB} (${b.eventDate.toISOString()})`);
+            return timeA - timeB;
         });
         
-        const firstEvent = todayEvents.sort((a, b) => {
-            const timeA = a.ts_utc || a.timestamp;
-            const timeB = b.ts_utc || b.timestamp;
-            
-            // Convert to numbers for comparison
-            const numA = typeof timeA === 'string' ? Number(timeA) : timeA;
-            const numB = typeof timeB === 'string' ? Number(timeB) : timeB;
-            
-            return numA - numB;
-        })[0];
+        const firstEvent = sortedEvents[0];
+        console.log(`First event today: ${firstEvent.numericTimestamp} -> ${firstEvent.eventDate.toISOString()}`);
         
-        console.log(`First event today:`, firstEvent);
+        // Log all events for debugging
+        sortedEvents.forEach((event, index) => {
+            console.log(`Event ${index + 1}: ${event.numericTimestamp} -> ${event.eventDate.toISOString()}`);
+        });
+        
         return firstEvent;
     } catch (error) {
         console.error('Error sorting events:', error);
-        return todayEvents[0]; // Fallback to first event without sorting if error occurs
+        return todayEventsWithTimestamps[0]; // Fallback to first event without sorting if error occurs
     }
 }
 
