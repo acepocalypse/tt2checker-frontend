@@ -304,29 +304,40 @@ async function fetchStats() {
 
 // Fun Facts functions
 function calculateTimeSince(timestamp) {
-    if (!timestamp) return 'Unknown';
+    if (!timestamp) {
+        console.warn('Empty timestamp provided to calculateTimeSince');
+        return 'Unknown';
+    }
+    
+    console.log('calculateTimeSince input:', timestamp, 'type:', typeof timestamp);
     
     try {
         let eventDate;
         
         if (typeof timestamp === 'string') {
+            // Handle the API format "YYYY-MM-DD HH:MM:SS" specially
             if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-                // Handle API format "YYYY-MM-DD HH:MM:SS" as UTC
+                console.log('Parsing timestamp as YYYY-MM-DD HH:MM:SS format');
                 const isoFormat = timestamp.replace(' ', 'T') + 'Z';
                 eventDate = new Date(isoFormat);
+                console.log('Parsed date:', eventDate, 'Valid:', !isNaN(eventDate.getTime()));
             } else if (!isNaN(Number(timestamp))) {
                 // If it's a numeric string, treat as unix timestamp
                 const num = Number(timestamp);
                 eventDate = new Date(num > 1e12 ? num : num * 1000);
+                console.log('Parsed numeric string timestamp:', eventDate);
             } else {
                 // Try direct parsing for ISO strings
                 eventDate = new Date(timestamp);
+                console.log('Parsed other string timestamp:', eventDate);
             }
         } else if (typeof timestamp === 'number') {
             // Handle unix timestamp (seconds or milliseconds)
             eventDate = new Date(timestamp > 1e12 ? timestamp : timestamp * 1000);
+            console.log('Parsed numeric timestamp:', eventDate);
         } else {
             eventDate = new Date(timestamp);
+            console.log('Parsed default timestamp:', eventDate);
         }
         
         if (isNaN(eventDate.getTime())) {
@@ -335,7 +346,10 @@ function calculateTimeSince(timestamp) {
         }
         
         const now = new Date();
+        console.log('Current time:', now);
+        console.log('Event time:', eventDate);
         const diffMs = now - eventDate;
+        console.log('Time difference (ms):', diffMs);
         
         // Handle negative differences (future timestamps)
         if (diffMs < 0) {
@@ -432,17 +446,33 @@ async function updateFunFacts() {
         const latestResponse = await fetch(`${apiUrl}/latest`);
         if (latestResponse.ok) {
             const latestEvent = await latestResponse.json();
-            console.log('Latest event for time since:', latestEvent);
+            console.log('Latest event full data:', JSON.stringify(latestEvent));
             
-            const timestamp = latestEvent.ts_utc || latestEvent.timestamp;
-            console.log('Using timestamp:', timestamp);
+            // Extract timestamp more carefully
+            let timestamp = null;
+            if (latestEvent.ts_utc) {
+                timestamp = latestEvent.ts_utc;
+                console.log('Using ts_utc timestamp:', timestamp);
+            } else if (latestEvent.timestamp) {
+                timestamp = latestEvent.timestamp;
+                console.log('Using timestamp field:', timestamp);
+            } else if (latestEvent.created_at) {
+                timestamp = latestEvent.created_at;
+                console.log('Using created_at field:', timestamp);
+            } else {
+                console.warn('No valid timestamp field found in latest event');
+                for (const key in latestEvent) {
+                    console.log(`Field ${key}:`, latestEvent[key], 'type:', typeof latestEvent[key]);
+                }
+            }
             
             if (timestamp) {
+                console.log('Final timestamp being used:', timestamp);
                 const timeSince = calculateTimeSince(timestamp);
                 console.log('Calculated time since:', timeSince);
                 document.getElementById('time-since-last').textContent = timeSince;
             } else {
-                console.warn('No timestamp found in latest event');
+                console.warn('No usable timestamp found in latest event');
                 document.getElementById('time-since-last').textContent = 'Unknown';
             }
         } else {
