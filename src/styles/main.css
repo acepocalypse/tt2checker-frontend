@@ -653,22 +653,3 @@ footer {
 .events-container::-webkit-scrollbar-thumb:hover {
     background: var(--text-muted);
 }
-}
-
-.events-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.events-container::-webkit-scrollbar-track {
-    background: var(--border-light);
-    border-radius: 3px;
-}
-
-.events-container::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-.events-container::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
-}
