@@ -311,31 +311,56 @@ function calculateTimeSince(timestamp) {
         
         if (typeof timestamp === 'string') {
             if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+                // Handle API format "YYYY-MM-DD HH:MM:SS" as UTC
                 const isoFormat = timestamp.replace(' ', 'T') + 'Z';
                 eventDate = new Date(isoFormat);
+            } else if (!isNaN(Number(timestamp))) {
+                // If it's a numeric string, treat as unix timestamp
+                const num = Number(timestamp);
+                eventDate = new Date(num > 1e12 ? num : num * 1000);
             } else {
+                // Try direct parsing for ISO strings
                 eventDate = new Date(timestamp);
             }
-        } else {
+        } else if (typeof timestamp === 'number') {
+            // Handle unix timestamp (seconds or milliseconds)
             eventDate = new Date(timestamp > 1e12 ? timestamp : timestamp * 1000);
+        } else {
+            eventDate = new Date(timestamp);
         }
         
-        if (isNaN(eventDate.getTime())) return 'Unknown';
+        if (isNaN(eventDate.getTime())) {
+            console.warn('Invalid date for timestamp:', timestamp);
+            return 'Unknown';
+        }
         
         const now = new Date();
         const diffMs = now - eventDate;
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
         
-        if (diffHours > 0) {
-            return `${diffHours}h ${diffMinutes}m`;
+        // Handle negative differences (future timestamps)
+        if (diffMs < 0) {
+            console.warn('Event timestamp is in the future:', timestamp);
+            return 'Just now';
+        }
+        
+        const diffSeconds = Math.floor(diffMs / 1000);
+        const diffMinutes = Math.floor(diffSeconds / 60);
+        const diffHours = Math.floor(diffMinutes / 60);
+        const diffDays = Math.floor(diffHours / 24);
+        
+        if (diffDays > 0) {
+            return `${diffDays}d ${diffHours % 24}h`;
+        } else if (diffHours > 0) {
+            return `${diffHours}h ${diffMinutes % 60}m`;
         } else if (diffMinutes > 0) {
             return `${diffMinutes}m`;
+        } else if (diffSeconds > 0) {
+            return `${diffSeconds}s`;
         } else {
             return 'Just now';
         }
     } catch (error) {
-        console.warn('Error calculating time since:', error);
+        console.error('Error calculating time since:', error, 'for timestamp:', timestamp);
         return 'Unknown';
     }
 }
@@ -403,13 +428,26 @@ function findFirstLaunchToday(events) {
 async function updateFunFacts() {
     try {
         // Get latest event for time since last launch
+        console.log('Fetching latest event for fun facts...');
         const latestResponse = await fetch(`${apiUrl}/latest`);
         if (latestResponse.ok) {
             const latestEvent = await latestResponse.json();
-            const timeSince = calculateTimeSince(latestEvent.ts_utc || latestEvent.timestamp);
-            document.getElementById('time-since-last').textContent = timeSince;
+            console.log('Latest event for time since:', latestEvent);
+            
+            const timestamp = latestEvent.ts_utc || latestEvent.timestamp;
+            console.log('Using timestamp:', timestamp);
+            
+            if (timestamp) {
+                const timeSince = calculateTimeSince(timestamp);
+                console.log('Calculated time since:', timeSince);
+                document.getElementById('time-since-last').textContent = timeSince;
+            } else {
+                console.warn('No timestamp found in latest event');
+                document.getElementById('time-since-last').textContent = 'Unknown';
+            }
         } else {
-            document.getElementById('time-since-last').textContent = 'Unknown';
+            console.error('Failed to fetch latest event:', latestResponse.status);
+            document.getElementById('time-since-last').textContent = 'Error';
         }
         
         // Get all events for other stats
@@ -431,8 +469,9 @@ async function updateFunFacts() {
             // Total launches
             document.getElementById('total-launches').textContent = events.length.toLocaleString();
         } else {
-            document.getElementById('first-launch-time').textContent = 'Unknown';
-            document.getElementById('total-launches').textContent = 'Unknown';
+            console.error('Failed to fetch events for fun facts:', eventsResponse.status);
+            document.getElementById('first-launch-time').textContent = 'Error';
+            document.getElementById('total-launches').textContent = 'Error';
         }
     } catch (error) {
         console.error('Error updating fun facts:', error);
