@@ -181,8 +181,14 @@ async function fetchTodayRunStats() {
         
         // Get today's date in Eastern Time
         const now = new Date();
-        const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-        const todayEastern = easternTime.toISOString().split('T')[0]; // Gets YYYY-MM-DD in Eastern Time
+        const timeZone = "America/New_York";
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+        const todayEastern = formatter.format(now); // YYYY-MM-DD format
         
         console.log(`Looking for events on Eastern date: ${todayEastern}`);
         
@@ -212,10 +218,8 @@ async function fetchTodayRunStats() {
                 }
                 
                 if (eventDate && !isNaN(eventDate.getTime())) {
-                    // Convert event time to Eastern Time
-                    const eventEasternTime = new Date(eventDate.toLocaleString("en-US", {timeZone: "America/New_York"}));
-                    const eventDateEastern = eventEasternTime.toISOString().split('T')[0];
-                    console.log(`Event Eastern date: ${eventDateEastern}`);
+                    // Convert event time to Eastern Time date string
+                    const eventDateEastern = formatter.format(eventDate);
                     return eventDateEastern === todayEastern;
                 }
                 
@@ -336,8 +340,14 @@ function findFirstLaunchToday(events) {
     
     // Get today's date in Eastern Time
     const now = new Date();
-    const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-    const todayEastern = easternTime.toISOString().split('T')[0]; // Gets YYYY-MM-DD in Eastern Time
+    const timeZone = "America/New_York";
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+    const todayEastern = formatter.format(now); // YYYY-MM-DD format
     
     console.log(`Looking for events matching today: ${todayEastern} (Eastern)`);
     
@@ -381,8 +391,7 @@ function findFirstLaunchToday(events) {
             }
             
             // Convert to Eastern Time for comparison
-            const eventEasternTime = new Date(eventDate.toLocaleString("en-US", {timeZone: "America/New_York"}));
-            const eventDateEastern = eventEasternTime.toISOString().split('T')[0];
+            const eventDateEastern = formatter.format(eventDate);
             
             if (eventDateEastern === todayEastern) {
                 console.log(`Event matches today: ${timestamp} -> ${eventDate.toISOString()} (Eastern: ${eventDateEastern})`);
