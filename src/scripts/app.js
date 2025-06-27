@@ -179,13 +179,14 @@ async function fetchTodayRunStats() {
         const data = await response.json();
         console.log('Fetched events for today stats:', data.length);
         
-        // Get today's date in UTC
+        // Get today's date in Eastern Time
         const now = new Date();
-        const todayUTC = now.toISOString().split('T')[0]; // Gets YYYY-MM-DD in UTC
+        const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+        const todayEastern = easternTime.toISOString().split('T')[0]; // Gets YYYY-MM-DD in Eastern Time
         
-        console.log(`Looking for events on UTC date: ${todayUTC}`);
+        console.log(`Looking for events on Eastern date: ${todayEastern}`);
         
-        // Filter for today's events using UTC dates
+        // Filter for today's events using Eastern Time dates
         const todayEvents = data.filter(event => {
             try {
                 if (!event) return false;
@@ -200,10 +201,9 @@ async function fetchTodayRunStats() {
                         const num = Number(timestamp);
                         eventDate = new Date(num * 1000);
                     } else if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-                        // Handle "YYYY-MM-DD HH:MM:SS" format
-                        const datePart = timestamp.split(' ')[0];
-                        console.log(`Event UTC date: ${datePart}`);
-                        return datePart === todayUTC;
+                        // Handle "YYYY-MM-DD HH:MM:SS" format (assume UTC)
+                        const isoFormat = timestamp.replace(' ', 'T') + 'Z';
+                        eventDate = new Date(isoFormat);
                     } else {
                         eventDate = new Date(timestamp);
                     }
@@ -212,9 +212,11 @@ async function fetchTodayRunStats() {
                 }
                 
                 if (eventDate && !isNaN(eventDate.getTime())) {
-                    const eventDateUTC = eventDate.toISOString().split('T')[0];
-                    console.log(`Event timestamp date: ${eventDateUTC}`);
-                    return eventDateUTC === todayUTC;
+                    // Convert event time to Eastern Time
+                    const eventEasternTime = new Date(eventDate.toLocaleString("en-US", {timeZone: "America/New_York"}));
+                    const eventDateEastern = eventEasternTime.toISOString().split('T')[0];
+                    console.log(`Event Eastern date: ${eventDateEastern}`);
+                    return eventDateEastern === todayEastern;
                 }
                 
                 return false;
@@ -224,7 +226,7 @@ async function fetchTodayRunStats() {
             }
         });
         
-        console.log(`Found ${todayEvents.length} events for today (${todayUTC})`);
+        console.log(`Found ${todayEvents.length} events for today (${todayEastern} Eastern)`);
         
         // Count total runs and successful runs
         const totalRuns = todayEvents.length;
@@ -332,11 +334,12 @@ function findFirstLaunchToday(events) {
         return null;
     }
     
-    // Get today's date in UTC
+    // Get today's date in Eastern Time
     const now = new Date();
-    const todayUTC = now.toISOString().split('T')[0]; // Gets YYYY-MM-DD in UTC
+    const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+    const todayEastern = easternTime.toISOString().split('T')[0]; // Gets YYYY-MM-DD in Eastern Time
     
-    console.log(`Looking for events matching today: ${todayUTC} (UTC)`);
+    console.log(`Looking for events matching today: ${todayEastern} (Eastern)`);
     
     // Filter events for today and convert timestamps to comparable format
     const todayEventsWithTimestamps = events.map(event => {
@@ -358,16 +361,10 @@ function findFirstLaunchToday(events) {
                     numericTimestamp = Number(timestamp);
                     eventDate = new Date(numericTimestamp * 1000);
                 } else if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-                    // Handle "YYYY-MM-DD HH:MM:SS" format
-                    const datePart = timestamp.split(' ')[0];
-                    if (datePart === todayUTC) {
-                        // Convert to Date for time extraction
-                        const isoFormat = timestamp.replace(' ', 'T') + 'Z';
-                        eventDate = new Date(isoFormat);
-                        numericTimestamp = eventDate.getTime() / 1000; // Convert back to Unix timestamp
-                    } else {
-                        return null; // Not today
-                    }
+                    // Handle "YYYY-MM-DD HH:MM:SS" format (assume UTC)
+                    const isoFormat = timestamp.replace(' ', 'T') + 'Z';
+                    eventDate = new Date(isoFormat);
+                    numericTimestamp = eventDate.getTime() / 1000;
                 } else {
                     // Try direct parsing for other formats
                     eventDate = new Date(timestamp);
@@ -383,9 +380,12 @@ function findFirstLaunchToday(events) {
                 return null;
             }
             
-            const eventDateUTC = eventDate.toISOString().split('T')[0];
-            if (eventDateUTC === todayUTC) {
-                console.log(`Event matches today: ${timestamp} -> ${eventDate.toISOString()}`);
+            // Convert to Eastern Time for comparison
+            const eventEasternTime = new Date(eventDate.toLocaleString("en-US", {timeZone: "America/New_York"}));
+            const eventDateEastern = eventEasternTime.toISOString().split('T')[0];
+            
+            if (eventDateEastern === todayEastern) {
+                console.log(`Event matches today: ${timestamp} -> ${eventDate.toISOString()} (Eastern: ${eventDateEastern})`);
                 return {
                     ...event,
                     numericTimestamp,
@@ -400,7 +400,7 @@ function findFirstLaunchToday(events) {
         }
     }).filter(event => event !== null);
     
-    console.log(`Found ${todayEventsWithTimestamps.length} events for today (${todayUTC})`);
+    console.log(`Found ${todayEventsWithTimestamps.length} events for today (${todayEastern} Eastern)`);
     
     if (todayEventsWithTimestamps.length === 0) {
         console.log('No events found for today');
