@@ -10,15 +10,15 @@ const formatTimestamp = timestamp => {
         
         // First, standardize the input
         if (typeof timestamp === 'string') {
-            // Handle the API format "YYYY-MM-DD HH:MM:SS" specially
-            if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-                // Replace space with 'T' for ISO format and add Z for UTC
+            // Handle Unix timestamp strings (like "1751029244.14846")
+            if (!isNaN(Number(timestamp))) {
+                const num = Number(timestamp);
+                // Convert to milliseconds if needed (Unix timestamps are in seconds)
+                date = new Date(num * 1000);
+            } else if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+                // Handle the legacy API format "YYYY-MM-DD HH:MM:SS"
                 const isoFormat = timestamp.replace(' ', 'T') + 'Z';
                 date = new Date(isoFormat);
-            } else if (!isNaN(Number(timestamp))) {
-                // If it's a numeric string, treat as unix timestamp
-                const num = Number(timestamp);
-                date = new Date(num > 1e12 ? num : num * 1000);
             } else {
                 // Try direct parsing for ISO strings
                 date = new Date(timestamp);
@@ -173,70 +173,48 @@ async function fetchEvents(limit = 50) {
 async function fetchTodayRunStats() {
     showLoading('run-counter');
     try {
-        // Get today's events from the API
         const response = await fetch(`${apiUrl}/events?limit=1000`);
         if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         
         const data = await response.json();
         console.log('Fetched events for today stats:', data.length);
         
-        // Get today's date in Eastern Time - more robust approach
+        // Get today's date in UTC
         const now = new Date();
-        const easternFormatter = new Intl.DateTimeFormat('en-CA', {
-            timeZone: 'America/New_York',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-        const todayEastern = easternFormatter.format(now); // Returns YYYY-MM-DD format
+        const todayUTC = now.toISOString().split('T')[0]; // Gets YYYY-MM-DD in UTC
         
-        console.log(`Looking for events on Eastern date: ${todayEastern}`);
-        console.log(`Current Eastern time: ${now.toLocaleString('en-US', {timeZone: 'America/New_York'})}`);
+        console.log(`Looking for events on UTC date: ${todayUTC}`);
         
-        // Filter for today's events
+        // Filter for today's events using UTC dates
         const todayEvents = data.filter(event => {
             try {
-                if (event.ts_utc && typeof event.ts_utc === 'string') {
-                    // Handle the API format "YYYY-MM-DD HH:MM:SS"
-                    const datePart = event.ts_utc.split(' ')[0]; // Get just the date part
-                    
-                    // Convert UTC timestamp to Eastern date
-                    const utcDateTime = event.ts_utc.replace(' ', 'T') + 'Z';
-                    const utcDate = new Date(utcDateTime);
-                    
-                    if (!isNaN(utcDate.getTime())) {
-                        const easternEventDate = new Intl.DateTimeFormat('en-CA', {
-                            timeZone: 'America/New_York',
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit'
-                        }).format(utcDate);
-                        
-                        console.log(`Event UTC: ${event.ts_utc} -> Eastern date: ${easternEventDate}`);
-                        return easternEventDate === todayEastern;
+                if (!event) return false;
+                
+                const timestamp = event.ts_utc || event.timestamp;
+                if (!timestamp) return false;
+                
+                let eventDate;
+                if (typeof timestamp === 'string') {
+                    if (!isNaN(Number(timestamp))) {
+                        // Handle Unix timestamp strings (like "1751029244.14846")
+                        const num = Number(timestamp);
+                        eventDate = new Date(num * 1000);
+                    } else if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+                        // Handle "YYYY-MM-DD HH:MM:SS" format
+                        const datePart = timestamp.split(' ')[0];
+                        console.log(`Event UTC date: ${datePart}`);
+                        return datePart === todayUTC;
+                    } else {
+                        eventDate = new Date(timestamp);
                     }
+                } else if (typeof timestamp === 'number') {
+                    eventDate = new Date(timestamp > 1e12 ? timestamp : timestamp * 1000);
                 }
                 
-                if (event.timestamp) {
-                    // Convert timestamp to Eastern Time for comparison
-                    let eventDate;
-                    if (typeof event.timestamp === 'number') {
-                        eventDate = new Date(event.timestamp > 1e12 ? event.timestamp : event.timestamp * 1000);
-                    } else {
-                        eventDate = new Date(event.timestamp);
-                    }
-                    
-                    if (!isNaN(eventDate.getTime())) {
-                        const easternEventDate = new Intl.DateTimeFormat('en-CA', {
-                            timeZone: 'America/New_York',
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit'
-                        }).format(eventDate);
-                        
-                        console.log(`Event timestamp: ${event.timestamp} -> Eastern date: ${easternEventDate}`);
-                        return easternEventDate === todayEastern;
-                    }
+                if (eventDate && !isNaN(eventDate.getTime())) {
+                    const eventDateUTC = eventDate.toISOString().split('T')[0];
+                    console.log(`Event timestamp date: ${eventDateUTC}`);
+                    return eventDateUTC === todayUTC;
                 }
                 
                 return false;
@@ -246,7 +224,7 @@ async function fetchTodayRunStats() {
             }
         });
         
-        console.log(`Found ${todayEvents.length} events for today (${todayEastern})`);
+        console.log(`Found ${todayEvents.length} events for today (${todayUTC})`);
         
         // Count total runs and successful runs
         const totalRuns = todayEvents.length;
@@ -310,7 +288,11 @@ function calculateTimeSince(timestamp) {
         let eventDate;
         
         if (typeof timestamp === 'string') {
-            if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+            // Handle Unix timestamp strings (like "1751029244.14846")
+            if (!isNaN(Number(timestamp))) {
+                const num = Number(timestamp);
+                eventDate = new Date(num * 1000);
+            } else if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
                 const isoFormat = timestamp.replace(' ', 'T') + 'Z';
                 eventDate = new Date(isoFormat);
             } else {
@@ -345,69 +327,62 @@ function calculateTimeSince(timestamp) {
 }
 
 function findFirstLaunchToday(events) {
-    // Updated after codebase sync
     if (!Array.isArray(events) || events.length === 0) {
         console.log('No events provided or empty array');
         return null;
     }
     
-    // Get today's date in Eastern Time
+    // Get today's date in UTC
     const now = new Date();
-    const easternFormatter = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'America/New_York',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    });
-    const todayEastern = easternFormatter.format(now);
+    const todayUTC = now.toISOString().split('T')[0]; // Gets YYYY-MM-DD in UTC
     
-    console.log(`Looking for events matching today: ${todayEastern} (Eastern Time)`);
+    console.log(`Looking for events matching today: ${todayUTC} (UTC)`);
     
-    // Performance optimization: Pre-filter with more efficient approach
+    // Filter events for today using UTC dates
     const todayEvents = events.filter(event => {
         try {
             if (!event) return false;
             
-            // Get the timestamp from event
             const timestamp = event.ts_utc || event.timestamp;
             if (!timestamp) {
                 console.log('Event missing timestamp:', event);
                 return false;
             }
             
-            // Parse the date based on timestamp format
             let eventDate;
-            if (typeof timestamp === 'string' && timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-                // Convert "YYYY-MM-DD HH:MM:SS" to ISO format
-                const utcDateTime = timestamp.replace(' ', 'T') + 'Z';
-                eventDate = new Date(utcDateTime);
+            if (typeof timestamp === 'string') {
+                if (!isNaN(Number(timestamp))) {
+                    // Handle Unix timestamp strings (like "1751029244.14846")
+                    const num = Number(timestamp);
+                    eventDate = new Date(num * 1000);
+                } else if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+                    // Handle "YYYY-MM-DD HH:MM:SS" format
+                    const datePart = timestamp.split(' ')[0];
+                    console.log(`Event UTC date: ${datePart}, Match: ${datePart === todayUTC}`);
+                    return datePart === todayUTC;
+                } else {
+                    // Try direct parsing for other formats
+                    eventDate = new Date(timestamp);
+                }
             } else if (typeof timestamp === 'number') {
-                // Handle numeric timestamps (convert ms/s if needed)
+                // Handle numeric timestamps
                 eventDate = new Date(timestamp > 1e12 ? timestamp : timestamp * 1000);
-            } else {
-                // Try direct parsing for other formats
-                eventDate = new Date(timestamp);
             }
             
-            if (isNaN(eventDate.getTime())) {
-                console.log(`Invalid date from timestamp: ${timestamp}`);
-                return false;
+            if (eventDate && !isNaN(eventDate.getTime())) {
+                const eventDateUTC = eventDate.toISOString().split('T')[0];
+                console.log(`Event date: ${eventDateUTC}, Match: ${eventDateUTC === todayUTC}`);
+                return eventDateUTC === todayUTC;
             }
             
-            // Format the event date in Eastern Time for comparison
-            const easternEventDate = easternFormatter.format(eventDate);
-            
-            // Debug output for troubleshooting
-            console.log(`Event time: ${timestamp}, Eastern date: ${easternEventDate}, Match: ${easternEventDate === todayEastern}`);
-            
-            return easternEventDate === todayEastern;
+            return false;
         } catch (err) {
             console.warn('Error processing event date in filter:', err, event);
             return false;
         }
     });
     
-    console.log(`Found ${todayEvents.length} events for today (${todayEastern})`);
+    console.log(`Found ${todayEvents.length} events for today (${todayUTC})`);
     
     if (todayEvents.length === 0) {
         console.log('No events found for today');
@@ -424,14 +399,11 @@ function findFirstLaunchToday(events) {
             const timeA = a.ts_utc || a.timestamp;
             const timeB = b.ts_utc || b.timestamp;
             
-            if (typeof timeA === 'string' && typeof timeB === 'string') {
-                return timeA.localeCompare(timeB);
-            }
+            // Convert to numbers for comparison
+            const numA = typeof timeA === 'string' ? Number(timeA) : timeA;
+            const numB = typeof timeB === 'string' ? Number(timeB) : timeB;
             
-            const dateA = new Date(typeof timeA === 'number' ? (timeA > 1e12 ? timeA : timeA * 1000) : timeA);
-            const dateB = new Date(typeof timeB === 'number' ? (timeB > 1e12 ? timeB : timeB * 1000) : timeB);
-            
-            return dateA - dateB;
+            return numA - numB;
         })[0];
         
         console.log(`First event today:`, firstEvent);

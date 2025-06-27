@@ -366,6 +366,11 @@ main {
     color: var(--error-color);
 }
 
+.outcome-rollback {
+    background-color: #faf089;
+    color: var(--warning-color);
+}
+
 .outcome-maintenance {
     background-color: #faf089;
     color: var(--warning-color);
