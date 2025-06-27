@@ -347,56 +347,79 @@ function calculateTimeSince(timestamp) {
 function findFirstLaunchToday(events) {
     // Updated after codebase sync
     if (!Array.isArray(events) || events.length === 0) {
+        console.log('No events provided or empty array');
         return null;
     }
     
     // Get today's date in Eastern Time
     const now = new Date();
-    const todayEastern = new Intl.DateTimeFormat('en-CA', {
+    const easternFormatter = new Intl.DateTimeFormat('en-CA', {
         timeZone: 'America/New_York',
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
-    }).format(now);
+    });
+    const todayEastern = easternFormatter.format(now);
+    
+    console.log(`Looking for events matching today: ${todayEastern} (Eastern Time)`);
     
     // Performance optimization: Pre-filter with more efficient approach
     const todayEvents = events.filter(event => {
         try {
             if (!event) return false;
             
-            let eventDate;
+            // Get the timestamp from event
             const timestamp = event.ts_utc || event.timestamp;
-            if (!timestamp) return false;
-            
-            if (typeof timestamp === 'string' && timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-                const utcDateTime = timestamp.replace(' ', 'T') + 'Z';
-                eventDate = new Date(utcDateTime);
-            } else {
-                eventDate = new Date(typeof timestamp === 'number' 
-                    ? (timestamp > 1e12 ? timestamp : timestamp * 1000)
-                    : timestamp);
+            if (!timestamp) {
+                console.log('Event missing timestamp:', event);
+                return false;
             }
             
-            if (isNaN(eventDate.getTime())) return false;
+            // Parse the date based on timestamp format
+            let eventDate;
+            if (typeof timestamp === 'string' && timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+                // Convert "YYYY-MM-DD HH:MM:SS" to ISO format
+                const utcDateTime = timestamp.replace(' ', 'T') + 'Z';
+                eventDate = new Date(utcDateTime);
+            } else if (typeof timestamp === 'number') {
+                // Handle numeric timestamps (convert ms/s if needed)
+                eventDate = new Date(timestamp > 1e12 ? timestamp : timestamp * 1000);
+            } else {
+                // Try direct parsing for other formats
+                eventDate = new Date(timestamp);
+            }
             
-            const easternEventDate = new Intl.DateTimeFormat('en-CA', {
-                timeZone: 'America/New_York',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            }).format(eventDate);
+            if (isNaN(eventDate.getTime())) {
+                console.log(`Invalid date from timestamp: ${timestamp}`);
+                return false;
+            }
+            
+            // Format the event date in Eastern Time for comparison
+            const easternEventDate = easternFormatter.format(eventDate);
+            
+            // Debug output for troubleshooting
+            console.log(`Event time: ${timestamp}, Eastern date: ${easternEventDate}, Match: ${easternEventDate === todayEastern}`);
             
             return easternEventDate === todayEastern;
         } catch (err) {
-            console.warn('Error processing event date in filter:', err);
+            console.warn('Error processing event date in filter:', err, event);
             return false;
         }
     });
     
-    if (todayEvents.length === 0) return null;
+    console.log(`Found ${todayEvents.length} events for today (${todayEastern})`);
+    
+    if (todayEvents.length === 0) {
+        console.log('No events found for today');
+        return null;
+    }
     
     // Sort by timestamp and get the earliest
     try {
+        todayEvents.forEach(event => {
+            console.log(`Today's event: ${event.ts_utc || event.timestamp}`);
+        });
+        
         const firstEvent = todayEvents.sort((a, b) => {
             const timeA = a.ts_utc || a.timestamp;
             const timeB = b.ts_utc || b.timestamp;
@@ -411,6 +434,7 @@ function findFirstLaunchToday(events) {
             return dateA - dateB;
         })[0];
         
+        console.log(`First event today:`, firstEvent);
         return firstEvent;
     } catch (error) {
         console.error('Error sorting events:', error);
@@ -434,6 +458,7 @@ async function updateFunFacts() {
         const eventsResponse = await fetch(`${apiUrl}/events?limit=1000`);
         if (eventsResponse.ok) {
             const events = await eventsResponse.json();
+            console.log(`Fetched ${events.length} events for fun facts`);
             
             // Find first launch today
             const firstLaunch = findFirstLaunchToday(events);
@@ -442,8 +467,10 @@ async function updateFunFacts() {
                 // Extract just the time part
                 const timeMatch = firstLaunchTime.match(/(\d{1,2}:\d{2}:\d{2}\s*[AP]M)/i);
                 document.getElementById('first-launch-time').textContent = timeMatch ? timeMatch[1] : 'Unknown';
+                console.log(`First launch today at: ${timeMatch ? timeMatch[1] : 'Unknown'}`);
             } else {
                 document.getElementById('first-launch-time').textContent = 'Not yet today';
+                console.log('No launches found for today');
             }
             
             // Total launches
