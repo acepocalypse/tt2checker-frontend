@@ -253,7 +253,6 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: var(--spacing-md);
 }
 
 .announcement-header h2 {
