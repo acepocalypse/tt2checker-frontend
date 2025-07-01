@@ -108,7 +108,7 @@ async function checkApiConnection() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         
         const data = await response.json();
-        statusElement.textContent = `Connected: ${data.message || 'API Online'}`;
+        statusElement.textContent = 'Connected';
         statusElement.className = 'api-status connected';
     } catch (error) {
         console.error('API connection failed:', error);
