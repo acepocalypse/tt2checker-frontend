@@ -152,8 +152,13 @@ async function fetchLatestEvent() {
         updateElement('latest-event', `
             <div class="event-card latest">
                 <div class="event-outcome outcome-${formatted.outcome.toLowerCase().replace(/\s+/g, '-')}">${formatted.outcome}</div>
-                <div class="event-time">${formatted.timestamp}</div>
-                ${queueHtml}
+                <div class="event-time-status">
+                    <span class="event-time">${formatted.timestamp}</span>
+                    ${queueHtml ? `<div class="queue-status">
+                        ${queueStatus && queueStatus.is_open === 1 && queueStatus.wait_time ? `<span class="queue-wait-time">${queueStatus.wait_time} min wait</span>` : ''}
+                        <span class="queue-open-status ${queueStatus && queueStatus.is_open === 1 ? 'open' : 'closed'}">${queueStatus && queueStatus.is_open === 1 ? 'Ride Open' : 'Ride Closed'}</span>
+                    </div>` : ''}
+                </div>
             </div>
         `);
     } catch (error) {

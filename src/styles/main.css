@@ -309,6 +309,28 @@ main {
     margin: var(--spacing-sm) 0;
 }
 
+.event-card.latest .event-time-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-sm);
+    gap: var(--spacing-md);
+}
+
+.event-card.latest .event-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.event-card.latest .queue-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 0.6875rem;
+}
+
 .event-item {
     display: grid;
     grid-template-columns: auto 1fr;
