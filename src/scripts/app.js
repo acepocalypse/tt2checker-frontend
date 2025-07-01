@@ -121,17 +121,39 @@ async function checkApiConnection() {
 async function fetchLatestEvent() {
     showLoading('latest-event');
     try {
-        const response = await fetch(`${apiUrl}/latest`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const [eventsResponse, queueData] = await Promise.all([
+            fetch(`${apiUrl}/latest`),
+            fetchQueueData()
+        ]);
         
-        const data = await response.json();
+        if (!eventsResponse.ok) throw new Error(`HTTP ${eventsResponse.status}: ${eventsResponse.statusText}`);
+        
+        const data = await eventsResponse.json();
         console.log('Latest event data:', data); // Debug log
         const formatted = formatEventData(data);
+        
+        // Get queue status for the latest event
+        const queueStatus = findClosestQueueStatus(data.ts || data.ts_utc || data.timestamp, queueData);
+        
+        let queueHtml = '';
+        if (queueStatus) {
+            const isOpen = queueStatus.is_open === 1;
+            const statusText = isOpen ? 'Ride Open' : 'Ride Closed';
+            const waitText = isOpen && queueStatus.wait_time ? `${queueStatus.wait_time} min` : '';
+            
+            queueHtml = `
+                <div class="queue-status">
+                    <span class="queue-open-status ${isOpen ? 'open' : 'closed'}">${statusText}</span>
+                    ${waitText ? `<span class="queue-wait-time">${waitText}</span>` : ''}
+                </div>
+            `;
+        }
         
         updateElement('latest-event', `
             <div class="event-card latest">
                 <div class="event-outcome outcome-${formatted.outcome.toLowerCase().replace(/\s+/g, '-')}">${formatted.outcome}</div>
                 <div class="event-time">${formatted.timestamp}</div>
+                ${queueHtml}
             </div>
         `);
     } catch (error) {
