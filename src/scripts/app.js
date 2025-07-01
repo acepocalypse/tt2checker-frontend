@@ -73,7 +73,7 @@ const formatTimestamp = timestamp => {
 };
 
 const formatEventData = event => ({
-    timestamp: formatTimestamp(event.ts_utc || event.timestamp),
+    timestamp: formatTimestamp(event.ts || event.ts_utc || event.timestamp),
     outcome: event.outcome || 'Unknown',
     details: event.outcome || 'Event'
 });
@@ -197,7 +197,7 @@ async function fetchTodayRunStats() {
             try {
                 if (!event) return false;
                 
-                const timestamp = event.ts_utc || event.timestamp;
+                const timestamp = event.ts || event.ts_utc || event.timestamp;
                 if (!timestamp) return false;
                 
                 let eventDate;
@@ -356,7 +356,7 @@ function findFirstLaunchToday(events) {
         try {
             if (!event) return null;
             
-            const timestamp = event.ts_utc || event.timestamp;
+            const timestamp = event.ts || event.ts_utc || event.timestamp;
             if (!timestamp) {
                 console.log('Event missing timestamp:', event);
                 return null;
@@ -446,7 +446,7 @@ async function updateFunFacts() {
         const latestResponse = await fetch(`${apiUrl}/latest`);
         if (latestResponse.ok) {
             const latestEvent = await latestResponse.json();
-            const timeSince = calculateTimeSince(latestEvent.ts_utc || latestEvent.timestamp);
+            const timeSince = calculateTimeSince(latestEvent.ts || latestEvent.ts_utc || latestEvent.timestamp);
             document.getElementById('time-since-last').textContent = timeSince || 'Just now';
         } else {
             document.getElementById('time-since-last').textContent = 'No data';
@@ -461,7 +461,7 @@ async function updateFunFacts() {
             // Find first launch today
             const firstLaunch = findFirstLaunchToday(events);
             if (firstLaunch) {
-                const firstLaunchTime = formatTimestamp(firstLaunch.ts_utc || firstLaunch.timestamp);
+                const firstLaunchTime = formatTimestamp(firstLaunch.ts || firstLaunch.ts_utc || firstLaunch.timestamp);
                 // Extract just the time part
                 const timeMatch = firstLaunchTime.match(/(\d{1,2}:\d{2}:\d{2}\s*[AP]M)/i);
                 document.getElementById('first-launch-time').textContent = timeMatch ? timeMatch[1] : 'Unknown';
