@@ -114,14 +114,8 @@ main {
     font-size: 0.85rem !important; 
 }
 
-@media (max-width: 768px) {
-    .bmc-container {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        order: 4;
-        margin-top: var(--spacing-xs);
-    }
+.bmc-container svg {
+    display: none !important;
 }
 
 .btn {
@@ -692,17 +686,37 @@ footer {
         justify-self: center;
         align-self: center;
     }
-    
+
     .bmc-container {
         display: flex;
         justify-content: center;
         align-items: center;
         margin: 0;
         order: 4;
+        width: 100%;
+        grid-column: 1 / -1;
+    }
+
+    .bmc-container .bmc-btn {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 100% !important;
+        justify-self: stretch !important;
+        text-align: center !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .bmc-container .bmc-btn span {
+        width: 100% !important;
+        text-align: center !important;
+        display: block !important;
     }
 
     .bmc-btn-container {
-            text-align: center;
+        text-align: center;
+        width: 100%;
     }
     
     .controls-inline {
