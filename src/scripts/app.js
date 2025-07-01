@@ -204,7 +204,7 @@ async function fetchEvents(limit = 50) {
                 let queueHtml = '';
                 if (queueStatus) {
                     const isOpen = queueStatus.is_open === 1;
-                    const statusText = isOpen ? 'Open' : 'Closed';
+                    const statusText = isOpen ? 'Ride Open' : 'Ride Closed';
                     const waitText = isOpen && queueStatus.wait_time ? `${queueStatus.wait_time} min` : '';
                     
                     queueHtml = `
