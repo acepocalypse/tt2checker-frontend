@@ -285,6 +285,13 @@ main {
     margin: 0;
 }
 
+.announcement-content p {
+    font-size: 0.65rem;
+    margin: 0;
+    line-height: 1.5;
+    text-align: justify;
+}
+
 .card.full-width {
     grid-column: 1 / -1;
     margin-top: var(--spacing-lg);
