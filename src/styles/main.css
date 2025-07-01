@@ -311,7 +311,7 @@ main {
 
 .event-item {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr;
     gap: var(--spacing-sm);
     padding: var(--spacing-sm);
     background: var(--surface-color);
@@ -398,9 +398,41 @@ main {
 }
 
 .event-details {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    line-height: 1.2;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    align-items: flex-end;
+}
+
+.queue-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 0.6875rem;
+}
+
+.queue-open-status {
+    padding: 1px var(--spacing-xs);
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.queue-open-status.open {
+    background-color: #c6f6d5;
+    color: var(--success-color);
+}
+
+.queue-open-status.closed {
+    background-color: #fed7d7;
+    color: var(--error-color);
+}
+
+.queue-wait-time {
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+    font-weight: 500;
 }
 
 /* Statistics */

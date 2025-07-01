@@ -140,24 +140,88 @@ async function fetchLatestEvent() {
     }
 }
 
+async function fetchQueueData() {
+    try {
+        const response = await fetch(`${apiUrl}/queue`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching queue data:', error);
+        return [];
+    }
+}
+
+function findClosestQueueStatus(eventTimestamp, queueData) {
+    if (!queueData || queueData.length === 0) return null;
+    
+    // Convert event timestamp to number for comparison
+    let eventTime;
+    if (typeof eventTimestamp === 'string') {
+        eventTime = !isNaN(Number(eventTimestamp)) ? Number(eventTimestamp) : new Date(eventTimestamp).getTime() / 1000;
+    } else {
+        eventTime = eventTimestamp > 1e12 ? eventTimestamp / 1000 : eventTimestamp;
+    }
+    
+    // Find the queue entry with timestamp closest to but before the event
+    let closestQueue = null;
+    let smallestDiff = Infinity;
+    
+    for (const queue of queueData) {
+        const queueTime = queue.ts;
+        const timeDiff = Math.abs(eventTime - queueTime);
+        
+        // Prefer queue data that's before or very close to the event time
+        if (timeDiff < smallestDiff && queueTime <= eventTime + 300) { // Allow 5 min tolerance
+            smallestDiff = timeDiff;
+            closestQueue = queue;
+        }
+    }
+    
+    return closestQueue;
+}
+
 async function fetchEvents(limit = 50) {
     showLoading('events-list');
     try {
-        const response = await fetch(`${apiUrl}/events?limit=${limit}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const [eventsResponse, queueData] = await Promise.all([
+            fetch(`${apiUrl}/events?limit=${limit}`),
+            fetchQueueData()
+        ]);
         
-        const data = await response.json();
-        console.log('Events data:', data); // Debug log
+        if (!eventsResponse.ok) throw new Error(`HTTP ${eventsResponse.status}: ${eventsResponse.statusText}`);
+        
+        const data = await eventsResponse.json();
+        console.log('Events data:', data);
+        console.log('Queue data:', queueData);
         
         if (data.length === 0) {
             updateElement('events-list', '<div class="no-data">No events found</div>');
         } else {
             const eventsHtml = data.map(event => {
                 const formatted = formatEventData(event);
+                const queueStatus = findClosestQueueStatus(event.ts || event.ts_utc || event.timestamp, queueData);
+                
+                let queueHtml = '';
+                if (queueStatus) {
+                    const isOpen = queueStatus.is_open === 1;
+                    const statusText = isOpen ? 'Open' : 'Closed';
+                    const waitText = isOpen && queueStatus.wait_time ? `${queueStatus.wait_time} min` : '';
+                    
+                    queueHtml = `
+                        <div class="queue-status">
+                            <span class="queue-open-status ${isOpen ? 'open' : 'closed'}">${statusText}</span>
+                            ${waitText ? `<span class="queue-wait-time">${waitText}</span>` : ''}
+                        </div>
+                    `;
+                }
+                
                 return `
                     <div class="event-item">
                         <span class="event-outcome outcome-${formatted.outcome.toLowerCase().replace(/\s+/g, '-')}">${formatted.outcome}</span>
-                        <span class="event-time">${formatted.timestamp}</span>
+                        <div class="event-details">
+                            <span class="event-time">${formatted.timestamp}</span>
+                            ${queueHtml}
+                        </div>
                     </div>
                 `;
             }).join('');
