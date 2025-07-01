@@ -143,7 +143,7 @@ async function fetchLatestEvent() {
             
             queueHtml = `
                 <div class="queue-status">
-                    ${waitText ? `<span class="queue-wait-time">${waitText}</span>` : ''}
+                    ${waitText ? `<span class="queue-wait-time">${waitText} wait</span>` : ''}
                     <span class="queue-open-status ${isOpen ? 'open' : 'closed'}">${statusText}</span>
                 </div>
             `;
@@ -231,7 +231,7 @@ async function fetchEvents(limit = 50) {
                     
                     queueHtml = `
                         <div class="queue-status">
-                            ${waitText ? `<span class="queue-wait-time">${waitText}</span>` : ''}
+                            ${waitText ? `<span class="queue-wait-time">${waitText} wait</span>` : ''}
                             <span class="queue-open-status ${isOpen ? 'open' : 'closed'}">${statusText}</span>
                         </div>
                     `;
