@@ -636,6 +636,15 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchEvents(parseInt(e.target.value));
     });
     setupAutoRefresh();
+    
+    // Close announcement functionality
+    const closeBtn = document.getElementById('close-announcement');
+    const announcement = document.getElementById('announcement');
+    if (closeBtn && announcement) {
+        closeBtn.addEventListener('click', () => {
+            announcement.style.display = 'none';
+        });
+    }
 });
 
 // Cleanup
