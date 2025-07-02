@@ -254,6 +254,7 @@ main {
 
 .card.announcement {
     margin-bottom: var(--spacing-lg);
+    max-width: var(--container-width, 973px);
 }
 
 .announcement-header {
