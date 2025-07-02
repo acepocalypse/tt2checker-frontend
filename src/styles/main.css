@@ -223,7 +223,7 @@ main {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-    max-height: 37vh; 
+    max-height: 36vh; 
     overflow-y: auto;
     padding: var(--spacing-xs);
 }
@@ -312,7 +312,7 @@ main {
 }
 
 .card h2 {
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
     color: var(--text-primary);
     font-size: 1rem;
     font-weight: 600;
@@ -936,4 +936,10 @@ footer {
         grid-template-columns: 1fr;
         gap: var(--spacing-xs);
     }
+
+    .consistency-card,
+    .consistency-card.latest {
+        margin: 0;
+    }
+
 }
