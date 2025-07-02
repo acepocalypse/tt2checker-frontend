@@ -632,14 +632,14 @@ function calculateLaunchConsistency(latestTimestamp, recentEvents = []) {
         if (diffMinutes > 20) {
             return {
                 status: 'major-pause',
-                label: 'Major Pause',
+                label: '🛑 Major Pause/Closed',
                 timeText: `Last launch ${timeSince} ago`,
                 indicator: 'major-pause'
             };
         } else if (diffMinutes > 5) {
             return {
                 status: 'minor-pause',
-                label: 'Minor Pause',
+                label: '🟡 Minor Pause',
                 timeText: `Last launch: ${timeSince} ago`,
                 indicator: 'minor-pause'
             };
@@ -682,15 +682,15 @@ function calculateLaunchConsistency(latestTimestamp, recentEvents = []) {
             if (avgDispatchTime <= 2.5) {
                 return {
                     status: 'fast',
-                    label: 'Fast Dispatch',
-                    timeText: `Average Launch Interval (Last 3): ${avgDispatchTime.toFixed(1)} min`,
+                    label: '🏃‍➡️ Fast Dispatch',
+                    timeText: `Average Launch Interval (Last 3): ${avgDispatchTime.toFixed(1)} minutes`,
                     indicator: 'fast'
                 };
             } else {
                 return {
                     status: 'slow',
-                    label: 'Slow Dispatch',
-                    timeText: `Average Launch Interval (Last 3): ${avgDispatchTime.toFixed(1)} min`,
+                    label: '🚶‍➡️ Slow Dispatch',
+                    timeText: `Average Launch Interval (Last 3): ${avgDispatchTime.toFixed(1)} minutes`,
                     indicator: 'slow'
                 };
             }
