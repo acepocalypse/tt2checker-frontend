@@ -632,14 +632,14 @@ function calculateLaunchConsistency(latestTimestamp, recentEvents = []) {
         if (diffMinutes > 20) {
             return {
                 status: 'major-pause',
-                label: '🛑 No Launch in 20+ minutes',
+                label: '🛑 Not Running',
                 timeText: `Last launch ${timeSince} ago`,
                 indicator: 'major-pause'
             };
         } else if (diffMinutes > 5) {
             return {
                 status: 'minor-pause',
-                label: '🟡 No Launch in 5+ minutes',
+                label: '🟡 Have not ran in 5+ mins',
                 timeText: `Last launch: ${timeSince} ago`,
                 indicator: 'minor-pause'
             };
