@@ -27,9 +27,9 @@
 [data-theme="dark"] {
     --primary-color: #62aae6;
     --secondary-color: #a0aec0;
-    --success-color: #48bb78;
+    --success-color: #2c8b54;
     --warning-color: #ed8936;
-    --error-color: #f56565;
+    --error-color: #b94949;
     --background-color: #1a202c;
     --surface-color: #2d3748;
     --text-primary: #f7fafc;
