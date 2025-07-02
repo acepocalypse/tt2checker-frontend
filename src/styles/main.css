@@ -660,7 +660,6 @@ footer {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
     align-items: stretch;
 }
 
@@ -693,7 +692,6 @@ footer {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
 }
 
 .counter-item {
@@ -748,7 +746,6 @@ footer {
     min-height: 120px;
 }
 
-/* Make consistency card match event card height */
 .consistency-card.latest {
     padding: var(--spacing-lg);
     border-radius: var(--border-radius);
@@ -776,6 +773,13 @@ footer {
     align-self: center;
     text-align: center;
     width: 100%;
+}
+
+.consistency-label {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
 }
 
 @media (max-width: 900px) {
@@ -916,6 +920,6 @@ footer {
 
     .latest-launch-dashboard {
         grid-template-columns: 1fr;
-        gap: var(--spacing-md);
+        gap: var(--spacing-xs);
     }
 }
