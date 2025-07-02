@@ -584,12 +584,189 @@ async function updateFunFacts() {
     }
 }
 
+// Launch Consistency functions
+function calculateLaunchConsistency(latestTimestamp, recentEvents = []) {
+    if (!latestTimestamp) {
+        return {
+            status: 'unknown',
+            label: 'Unknown Status',
+            timeText: 'No data available',
+            indicator: 'major-pause'
+        };
+    }
+    
+    try {
+        let eventDate;
+        
+        if (typeof latestTimestamp === 'string') {
+            if (!isNaN(Number(latestTimestamp))) {
+                const num = Number(latestTimestamp);
+                eventDate = new Date(num * 1000);
+            } else if (latestTimestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+                const isoFormat = latestTimestamp.replace(' ', 'T') + 'Z';
+                eventDate = new Date(isoFormat);
+            } else {
+                eventDate = new Date(latestTimestamp);
+            }
+        } else {
+            eventDate = new Date(latestTimestamp > 1e12 ? latestTimestamp : latestTimestamp * 1000);
+        }
+        
+        if (isNaN(eventDate.getTime())) {
+            return {
+                status: 'unknown',
+                label: 'Unknown Status',
+                timeText: 'Invalid date',
+                indicator: 'major-pause'
+            };
+        }
+        
+        const now = new Date();
+        const diffMs = now - eventDate;
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+        
+        // Calculate time text
+        const timeSince = calculateTimeSince(latestTimestamp);
+        
+        // For minor pause and major pause, use time since last launch
+        if (diffMinutes > 20) {
+            return {
+                status: 'major-pause',
+                label: 'Major Pause',
+                timeText: `Last launch ${timeSince} ago`,
+                indicator: 'major-pause'
+            };
+        } else if (diffMinutes > 5) {
+            return {
+                status: 'minor-pause',
+                label: 'Minor Pause',
+                timeText: `Last launch: ${timeSince} ago`,
+                indicator: 'minor-pause'
+            };
+        }
+        
+        // For fast/slow dispatch, calculate average time between last 3 launches
+        if (recentEvents && recentEvents.length >= 3) {
+            // Convert timestamps to numeric values and sort by time (newest first)
+            const sortedEvents = recentEvents.map(event => {
+                const timestamp = event.ts || event.ts_utc || event.timestamp;
+                let numericTimestamp;
+                
+                if (typeof timestamp === 'string') {
+                    if (!isNaN(Number(timestamp))) {
+                        numericTimestamp = Number(timestamp);
+                    } else if (timestamp.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+                        const isoFormat = timestamp.replace(' ', 'T') + 'Z';
+                        numericTimestamp = new Date(isoFormat).getTime() / 1000;
+                    } else {
+                        numericTimestamp = new Date(timestamp).getTime() / 1000;
+                    }
+                } else {
+                    numericTimestamp = timestamp > 1e12 ? timestamp / 1000 : timestamp;
+                }
+                
+                return { ...event, numericTimestamp };
+            }).sort((a, b) => b.numericTimestamp - a.numericTimestamp);
+            
+            // Calculate time differences between consecutive launches
+            const timeDiffs = [];
+            for (let i = 0; i < Math.min(3, sortedEvents.length - 1); i++) {
+                const diff = sortedEvents[i].numericTimestamp - sortedEvents[i + 1].numericTimestamp;
+                timeDiffs.push(diff / 60); // Convert to minutes
+            }
+            
+            // Calculate average dispatch time
+            const avgDispatchTime = timeDiffs.reduce((sum, diff) => sum + diff, 0) / timeDiffs.length;
+            
+            // Determine status based on average dispatch time
+            if (avgDispatchTime <= 2.5) {
+                return {
+                    status: 'fast',
+                    label: 'Fast Dispatch',
+                    timeText: `Average Launch Interval (Last 3): ${avgDispatchTime.toFixed(1)} min`,
+                    indicator: 'fast'
+                };
+            } else {
+                return {
+                    status: 'slow',
+                    label: 'Slow Dispatch',
+                    timeText: `Average Launch Interval (Last 3): ${avgDispatchTime.toFixed(1)} min`,
+                    indicator: 'slow'
+                };
+            }
+        } else {
+            // Fallback to time-based logic if not enough events
+            if (diffMinutes <= 2.5) {
+                return {
+                    status: 'fast',
+                    label: 'Fast Dispatch',
+                    timeText: `Last launch: ${timeSince}`,
+                    indicator: 'fast'
+                };
+            } else {
+                return {
+                    status: 'slow',
+                    label: 'Slow Dispatch',
+                    timeText: `Last launch: ${timeSince} ago`,
+                    indicator: 'slow'
+                };
+            }
+        }
+    } catch (error) {
+        console.warn('Error calculating launch consistency:', error);
+        return {
+            status: 'unknown',
+            label: 'Unknown Status',
+            timeText: 'Error calculating status',
+            indicator: 'major-pause'
+        };
+    }
+}
+
+async function updateLaunchConsistency() {
+    showLoading('launch-consistency');
+    try {
+        const [latestResponse, recentEventsResponse] = await Promise.all([
+            fetch(`${apiUrl}/latest`),
+            fetch(`${apiUrl}/events?limit=5`) // Get recent events for average calculation
+        ]);
+        
+        if (!latestResponse.ok) throw new Error(`HTTP ${latestResponse.status}: ${latestResponse.statusText}`);
+        
+        const latestData = await latestResponse.json();
+        let recentEvents = [];
+        
+        if (recentEventsResponse.ok) {
+            recentEvents = await recentEventsResponse.json();
+        }
+        
+        const consistency = calculateLaunchConsistency(
+            latestData.ts || latestData.ts_utc || latestData.timestamp,
+            recentEvents
+        );
+        
+        updateElement('launch-consistency', `
+            <div class="consistency-card latest">
+                <div class="consistency-status">
+                    <div class="consistency-indicator ${consistency.indicator}"></div>
+                    <span class="consistency-label">${consistency.label}</span>
+                </div>
+                <div class="consistency-time">${consistency.timeText}</div>
+            </div>
+        `);
+    } catch (error) {
+        console.error('Error updating launch consistency:', error);
+        showError('launch-consistency', 'Failed to fetch consistency status');
+    }
+}
+
 // Refresh functions
 async function refreshAllData() {
     const limit = document.getElementById('event-limit').value;
     await Promise.all([
         checkApiConnection(),
         fetchLatestEvent(),
+        updateLaunchConsistency(),
         fetchEvents(parseInt(limit)),
         fetchStats(),
         fetchTodayRunStats(),
