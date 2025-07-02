@@ -665,7 +665,7 @@ footer {
 
 .counter-item {
     text-align: center;
-    padding: var(--spacing-xs);
+    padding: var(--spacing-sm);
     background: var(--surface-color);
     border-radius: var(--border-radius);
     border: 1px solid var(--border-light);
