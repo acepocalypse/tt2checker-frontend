@@ -312,14 +312,15 @@ main {
     justify-content: space-between;
     align-items: center;
     margin-bottom: var(--spacing-md);
-    flex-wrap: wrap;
     gap: var(--spacing-md);
+    min-height: 2rem;
 }
 
 .section-header h2 {
     margin-bottom: 0;
     border-bottom: none;
     padding-bottom: 0;
+    flex-shrink: 0;
 }
 
 .section-header .controls-inline {
@@ -327,6 +328,7 @@ main {
     align-items: center;
     gap: var(--spacing-xs);
     font-size: 0.875rem;
+    flex-shrink: 0;
 }
 
 /* Loading and error states */
@@ -731,7 +733,6 @@ footer {
         align-items: center;
         gap: var(--spacing-xs);
         justify-content: center;
-        width: 100%;
     }
     
     .auto-refresh {
@@ -772,30 +773,12 @@ footer {
     }
     
     .section-header {
-        flex-direction: column;
-        align-items: stretch;
         gap: var(--spacing-sm);
+        min-height: auto;
     }
     
     .section-header .controls-inline {
-        justify-content: center;
+        justify-content: flex-end;
+        flex-shrink: 1;
     }
-}
-
-.events-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.events-container::-webkit-scrollbar-track {
-    background: var(--border-light);
-    border-radius: 3px;
-}
-
-.events-container::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-.events-container::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
 }
