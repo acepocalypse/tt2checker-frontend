@@ -262,7 +262,6 @@ async function fetchEvents(limit = 50) {
 }
 
 async function fetchTodayRunStats() {
-    showLoading('run-counter');
     try {
         const response = await fetch(`${apiUrl}/events?limit=1000`);
         if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -336,22 +335,13 @@ async function fetchTodayRunStats() {
         
         console.log(`Total runs: ${totalRuns}, Successful: ${successfulRuns}, Rate: ${successRate}%`);
         
-        // Update the counter elements
-        updateElement('run-counter', `
-            <div class="counter-grid">
-                <div class="counter-item">
-                    <span class="counter-label">Runs Today:</span>
-                    <span class="counter-value" id="runs-today">${totalRuns}</span>
-                </div>
-                <div class="counter-item">
-                    <span class="counter-label">Success Rate:</span>
-                    <span class="counter-value" id="success-rate">${successRate}%</span>
-                </div>
-            </div>
-        `);
+        // Update the individual counter elements
+        updateElement('runs-today', totalRuns);
+        updateElement('success-rate', `${successRate}%`);
     } catch (error) {
         console.error('Error fetching today\'s run stats:', error);
-        showError('run-counter', 'Failed to fetch today\'s run statistics');
+        updateElement('runs-today', 'Error');
+        updateElement('success-rate', 'Error');
     }
 }
 
