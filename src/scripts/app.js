@@ -1,6 +1,30 @@
 const apiUrl = 'https://api.thrill2.top';
 let autoRefreshInterval;
 
+// Theme management
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeToggleIcon(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeToggleIcon(newTheme);
+}
+
+function updateThemeToggleIcon(theme) {
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+        themeToggle.setAttribute('aria-label', `Switch to ${theme === 'light' ? 'dark' : 'light'} mode`);
+    }
+}
+
 // Utility functions
 const formatTimestamp = timestamp => {
     if (!timestamp) return 'Unknown time';
@@ -794,6 +818,9 @@ function setupAutoRefresh() {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize theme first
+    initializeTheme();
+    
     checkApiConnection();
     refreshAllData();
     // Update fun facts every minute for the "time since" counter
@@ -803,6 +830,9 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchEvents(parseInt(e.target.value));
     });
     setupAutoRefresh();
+    
+    // Theme toggle event listener
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
     
     // Close announcement functionality
     const closeBtn = document.getElementById('close-announcement');
