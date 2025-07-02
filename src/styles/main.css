@@ -930,7 +930,7 @@ footer {
     }
     
     .counter-display {
-        padding: var(--spacing-md);
+        padding: var(--spacing-sm);
     }
 
     .latest-launch-dashboard {
