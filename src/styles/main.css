@@ -809,7 +809,8 @@ footer {
 
 @media (max-width: 768px) {
     .container {
-        padding: 0 var(--spacing-sm);
+        padding: 0 var(--spacing-md);
+        margin: 0;
     }
     
     header {
