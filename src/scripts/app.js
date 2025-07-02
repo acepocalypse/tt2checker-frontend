@@ -632,14 +632,14 @@ function calculateLaunchConsistency(latestTimestamp, recentEvents = []) {
         if (diffMinutes > 20) {
             return {
                 status: 'major-pause',
-                label: '🛑 Major Pause/Closed',
+                label: '🛑 Major Delay/Closed',
                 timeText: `Last launch ${timeSince} ago`,
                 indicator: 'major-pause'
             };
         } else if (diffMinutes > 5) {
             return {
                 status: 'minor-pause',
-                label: '🟡 Minor Pause',
+                label: '🟡 Minor Delay/Closed',
                 timeText: `Last launch: ${timeSince} ago`,
                 indicator: 'minor-pause'
             };
