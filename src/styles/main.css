@@ -709,7 +709,7 @@ footer {
     padding: var(--spacing-sm);
     background: var(--surface-color);
     border-radius: var(--border-radius);
-    border: 1px solid var(--border-light);
+    border: 1px solid var(--border-color);
 }
 
 .counter-item h3 {
