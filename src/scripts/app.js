@@ -3,9 +3,11 @@ let autoRefreshInterval;
 
 // Theme management
 function initializeTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeToggleIcon(savedTheme);
+    const savedTheme = localStorage.getItem('theme');
+    // Always default to 'light' if no saved preference exists
+    const theme = savedTheme || 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    updateThemeToggleIcon(theme);
 }
 
 function toggleTheme() {
